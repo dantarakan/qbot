@@ -43,9 +43,9 @@ public:
 		
 		ROS_INFO("NLP received response from SPC: %s\n", spcnlp.response.c_str());
 		// If response is empty, return an error
-		if(spcnlp.response.empty())
+		if(spcnlp.response.empty() && sys_state != 21)
 		{
-			nlpres.res_type = 1;
+			nlpres.res_type = 2;
 		}
 		else
 		{
