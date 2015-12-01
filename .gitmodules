@@ -1,0 +1,3 @@
+[submodule "src/naoqi_driver"]
+	path = src/naoqi_driver
+	url = ../../ros-naoqi/naoqi_driver.git
