@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#
 # Copyright (c) 2014 Miguel Sarabia
 # Imperial College London
 #
@@ -24,33 +24,19 @@
 #
 #
 
+import sys
 import rospy
-from naoqi import ALProxy
-from sensor_msgs.msg import Joy
+#import nao_move_lib.MoveNao
+from nao_move_lib import MoveNao
 
-class _Constants:
-    joy_topic = "joy"
+if __name__ == "__main__":
+    rospy.init_node("MoveNao", sys.argv)
 
-    linear_factor = 0.7
-    angular_factor = 0.5
+    #Get parameters
+    ip = rospy.get_param("nao_ip", "127.0.0.1")
+    port = rospy.get_param("nao_port", 60438)
 
-class MoveNao:
-    def __init__(self, ip, port):
-
-        self.__proxy = ALProxy("ALMotion", ip, port)
-
-        self.__walk_sub = rospy.Subscriber(
-            _Constants.joy_topic,
-            Joy,
-            self.walk)
-
-
-    def walk(self, msg):
-        angular = msg.axes[0]
-        linear = msg.axes[1]
-       
-        self.__proxy.move(
-            linear * _Constants.linear_factor, # Forwards
-            0.0, #Sideways
-            angular * _Constants.angular_factor ) #Turning
-
+    njm = MoveNao(ip, port)
+    rospy.loginfo("NaoMotion started")
+    rospy.spin()
+    rospy.loginfo("NaoMotion stopped")

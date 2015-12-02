@@ -156,6 +156,9 @@ include_directories(
 install(DIRECTORY nodes/
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     USE_SOURCE_PERMISSIONS)
+    
+#catkin_install_python(PROGRAMS nodes/naomotion_node.py
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS moveNao moveNao_node

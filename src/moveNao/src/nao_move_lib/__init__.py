@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2014 Miguel Sarabia
 # Imperial College London
 #
@@ -24,33 +22,4 @@
 #
 #
 
-import rospy
-from naoqi import ALProxy
-from sensor_msgs.msg import Joy
-
-class _Constants:
-    joy_topic = "joy"
-
-    linear_factor = 0.7
-    angular_factor = 0.5
-
-class MoveNao:
-    def __init__(self, ip, port):
-
-        self.__proxy = ALProxy("ALMotion", ip, port)
-
-        self.__walk_sub = rospy.Subscriber(
-            _Constants.joy_topic,
-            Joy,
-            self.walk)
-
-
-    def walk(self, msg):
-        angular = msg.axes[0]
-        linear = msg.axes[1]
-       
-        self.__proxy.move(
-            linear * _Constants.linear_factor, # Forwards
-            0.0, #Sideways
-            angular * _Constants.angular_factor ) #Turning
-
+from .move import MoveNao

@@ -8,6 +8,6 @@
   <param name="nap_port" value="$(arg nao_port)" />
 
   <!--Launch all NAO puppet nodes -->
-  <node pkg="moveNao" type="move_node.py" name="Move" required="true"  />
+  <node pkg="moveNao" type="naomotion_node.py" name="MoveNao" required="true"  />
 
 </launch>
