@@ -35,6 +35,20 @@ source /opt/extra_ws/devel/setup.bash
 roslaunch /opt/extra_ws/src/nao_puppet/launch/nao_puppet.launch
 ```
 
+#### Launch MoveNao:
+Launch Cho
+```sh
+choregraphe
+```
+Note the port number from the terminal.
+In moveNao/nodes/naomotion_node.py, change port number on line 37 to the new number.
+In a new terminal:
+```sh
+catkin_make
+source /opt/extra_ws/devel/setup.bash
+roslaunch ~/catkin_ws/src/moveNao/launch/moveNao.launch
+```
+
 #### To demo a node:
 1. Build Q-Bot
 2. Launch Q-Bot
