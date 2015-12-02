@@ -1,0 +1,13 @@
+<launch>
+  <!--Get arguments at launch time-->
+  <arg name="nao_ip" default="127.0.0.1"/>
+  <arg name="nao_port" default="9559" />
+
+  <!-- Set parameters -->
+  <param name="nao_ip" value="$(arg nao_ip)" />
+  <param name="nap_port" value="$(arg nao_port)" />
+
+  <!--Launch all NAO puppet nodes -->
+  <node pkg="moveNao" type="move_node.py" name="Move" required="true"  />
+
+</launch>
