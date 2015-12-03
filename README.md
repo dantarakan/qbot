@@ -78,6 +78,11 @@ Replace "cnc" by your desired node name.
 4: Request for a nurse
 ```
 
+#### Available postures:
+```sh
+['Crouch', 'LyingBack', 'LyingBelly', 'Sit', 'SitOnChair', 'SitRelax', 'Stand', 'StandInit', 'StandZero']
+```
+
 ### Todos
 
  - Sze: publish sys_state to CNC_2_SPC every time it is changed

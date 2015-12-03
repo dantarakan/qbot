@@ -1,6 +1,8 @@
 <launch>
   <!--Get arguments at launch time-->
   <arg name="nao_ip" default="127.0.0.1"/>
+  <!--Use the line below to connect to actual NAO-->
+  <!--<arg name="nao_ip" default="10.0.0.145"/>-->
   <arg name="nao_port" default="9559" />
 
   <!-- Set parameters -->
@@ -8,6 +10,6 @@
   <param name="nap_port" value="$(arg nao_port)" />
 
   <!--Launch all NAO puppet nodes -->
-  <node pkg="moveNao" type="naomotion_node.py" name="MoveNao" required="true"  />
+  <node pkg="movenao" type="naomotion_node.py" name="MoveNao" required="true"  />
 
 </launch>

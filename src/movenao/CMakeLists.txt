@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(moveNao)
+project(movenao)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -65,7 +65,7 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-add_message_files( DIRECTORY msg FILES Status.msg )
+add_message_files( DIRECTORY msg FILES Walk_control.msg )
 generate_messages( DEPENDENCIES std_msgs )
 
 ################################################
@@ -126,7 +126,7 @@ include_directories(
 # add_dependencies(moveNao ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(move_node src/move.py)
+#add_executable(move_node src/move.py)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -156,6 +156,9 @@ add_executable(move_node src/move.py)
 install(DIRECTORY nodes/
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     USE_SOURCE_PERMISSIONS)
+    
+#catkin_install_python(PROGRAMS nodes/naomotion_node.py
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS moveNao moveNao_node

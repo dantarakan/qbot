@@ -26,74 +26,39 @@
 
 import rospy
 from naoqi import ALProxy
-from sensor_msgs.msg import Joy
-from nao_puppet.msg import MoveHead
+from movenao.msg import Walk_control
+from std_msgs.msg import String
 
 class _Constants:
     joy_topic = "joy"
-    move_head_topic = "move_head"
-
+    msg_topic = "posture"
     linear_factor = 0.7
     angular_factor = 0.5
-    head_speed = 0.2 # Between 0-1
 
-    yaw_limits = [-2.0857,  2.0857]
-    pitch_limits = [-0.6720,  0.5149]
-
-class Move:
+class MoveNao:
     def __init__(self, ip, port):
 
         self.__proxy = ALProxy("ALMotion", ip, port)
-
+        self.__proxyPosture = ALProxy("ALRobotPosture", ip, port)
         self.__walk_sub = rospy.Subscriber(
             _Constants.joy_topic,
-            Joy,
+            Walk_control,
             self.walk)
-        
-        self.__move_head_sub = rospy.Subscriber(
-            _Constants.move_head_topic,
-            MoveHead,
-            self.look )
-
-
+            
+        self.__subs = rospy.Subscriber(
+        _Constants.msg_topic,
+        String,
+        self.go_to_posture)
+            
     def walk(self, msg):
-        angular = msg.axes[0]
-        linear = msg.axes[1]
+        angular = msg.angular
+        linear = msg.linear
        
         self.__proxy.move(
             linear * _Constants.linear_factor, # Forwards
             0.0, #Sideways
             angular * _Constants.angular_factor ) #Turning
-
-
-    def look(self, msg):
-        joint_names = ["HeadYaw", "HeadPitch"]
-        current = self.__proxy.getAngles( joint_names, False )
-        yaw = current[0] + msg.yaw
-        pitch = current[1] + msg.pitch
-        
-        #Make sure we don't exceed angle limits
-        if yaw < _Constants.yaw_limits[0]:
-            yaw = _Constants.yaw_limits[0]
-        elif yaw > _Constants.yaw_limits[1]:
-            yaw = _Constants.yaw_limits[1]
-
-        if pitch < _Constants.pitch_limits[0]:
-            pitch = _Constants.pitch_limits[0]
-        elif pitch > _Constants.pitch_limits[1]:
-            pitch = _Constants.pitch_limits[1]
-
-        self.__proxy.angleInterpolationWithSpeed(
-            joint_names,
-            [ yaw, pitch ],
-            _Constants.head_speed)
-
-# Main function.
-if __name__ == '__main__':
-    # Initialize the node and name it.
-    rospy.init_node('move')
-    # Go to class functions that do all the heavy lifting. Do error checking.
-    try:
-        ne = Move()
-    except rospy.ROSInterruptException: pass
+            
+    def go_to_posture(self, msg):
+        self.__proxyPosture.goToPosture(msg.data, 1.0)
 
