@@ -20,14 +20,15 @@ private:
 	
 public:
 	NLP_Node(ros::NodeHandle& n){
-		nlpPub_ = n.advertise<qbot::NLPRes>("/NLP_2_CNC", bufferSize);
-		cncSub_ = n.subscribe("/CNC_2_SPC", bufferSize, &NLP_Node::cncCallback, this);
-		spcSub_ = n.subscribe("/SPC_2_NLP", bufferSize, &NLP_Node::spcCallback, this);
+		//nlpPub_ = n.advertise<qbot::NLPRes>("/NLP_2_CNC", bufferSize);
+		//cncSub_ = n.subscribe("/CNC_2_SPC", bufferSize, &NLP_Node::cncCallback, this);
+		//spcSub_ = n.subscribe("/SPC_2_NLP", bufferSize, &NLP_Node::spcCallback, this);
 	}
 	
 	std::string getAnswer(std::string response){
 		return "6";
 	}
+	
 	
 	// CNC messaged SPC
 	void cncCallback(const qbot::SpcCmd& spccmd){

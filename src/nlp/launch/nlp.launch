@@ -1,0 +1,6 @@
+<launch>
+
+  <!--Launch all NAO puppet nodes -->
+  <node pkg="nlp" type="nlp_node.py" name="NLP" required="true"  />
+
+</launch>
