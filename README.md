@@ -17,6 +17,12 @@ Here lies the ROS project, built by Sze Tan, Hanyi Hu, Daniil Tarakanov, Alxandr
 ~/catkin_ws/src/qbot
 ```
 
+##### NLP:
+
+```sh
+~/catkin_ws/src/nlp
+```
+
 #### Build:
 ```sh
 cd ~/catkin_ws
@@ -28,6 +34,7 @@ catkin_make
 source ~/catkin_ws/devel/setup.bash
 roslaunch ~/catkin_ws/src/qbot/launch/qbot.launch
 ```
+This can be also be used to launch any other package. Simply replace *qbot* by the package name.
 
 #### Launch Nao Puppet:
 ```sh
@@ -36,22 +43,23 @@ roslaunch /opt/extra_ws/src/nao_puppet/launch/nao_puppet.launch
 ```
 
 #### Launch MoveNao:
-Launch Cho
+Launch Choregraphe
 ```sh
 choregraphe
 ```
 Note the port number from the terminal.
-In moveNao/nodes/naomotion_node.py, change port number on line 37 to the new number.
+In moveNao/nodes/naomotion_node.py change port number on line 37 to the new number.
+Also change the port number in ~/catkin_ws/src/movenao/launch/movenao.launch
 In a new terminal:
 ```sh
 catkin_make
-source /opt/extra_ws/devel/setup.bash
-roslaunch ~/catkin_ws/src/moveNao/launch/moveNao.launch
+source ~/catkin_ws/devel/setup.bash
+roslaunch ~/catkin_ws/src/movenao/launch/movenao.launch
 ```
 
 #### To demo a node:
-1. Build Q-Bot
-2. Launch Q-Bot
+1. Build
+2. Launch Q-Bot (Or any other package that you want to test)
 3. In the terminal do:
 ```sh
 ~/scripts/testcnc.sh # Demo CNC node
@@ -69,7 +77,7 @@ Replace "cnc" by your desired node name.
 22: Finished
 ```
 
-##### nlpres.res_type
+##### NLPRes.res_type
 ```sh
 0: Here’s your answer
 1: Got gibberish, please ask again
