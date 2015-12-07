@@ -33,6 +33,10 @@ catkin_make
 ```sh
 source ~/catkin_ws/devel/setup.bash
 roslaunch ~/catkin_ws/src/qbot/launch/qbot.launch
+
+OR
+
+roslaunch qbot qbot.launch
 ```
 This can be also be used to launch any other package. Simply replace *qbot* by the package name.
 
@@ -69,12 +73,17 @@ Replace "cnc" by your desired node name.
 #### Codes used
 ##### sys_state
 ```sh
-0: Just woke up
+0: Just woke up; RESET state
+1: Activated; ready to work
 10: Navigating
 11: Reached the patient
 20: Able to start question
 21: Conducting questionnaire
 22: Finished
+
+100: Emergency Abort State
+203: Taking a break
+204: Contacting Nurse
 ```
 
 ##### NLPRes.res_type
@@ -93,8 +102,8 @@ Replace "cnc" by your desired node name.
 
 ### Todos
 
- - Sze: publish sys_state to CNC_2_SPC every time it is changed
- - Sze: subscribe to NLP_2_CNC topic
+ - Sze: publish sys_state to CNC_2_SPC every time it is changed (done)
+ - Sze: subscribe to NLP_2_CNC topic	(done)
  - Guang: Code a minimalistic speech-processing node
  - Alex, Hanyi: Code a minimalistic naigation node
 

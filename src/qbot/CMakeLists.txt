@@ -53,6 +53,8 @@ find_package(catkin REQUIRED COMPONENTS
    SpcRes.msg
    SpcNLP.msg
    NLPRes.msg
+   GuiRes.msg
+   CncStatus.msg
  )
 
 ## Generate services in the 'srv' folder

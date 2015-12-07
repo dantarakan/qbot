@@ -3,6 +3,9 @@
 #include <qbot/SpcCmd.h>
 #include <qbot/NavRes.h>
 #include <qbot/SpcRes.h>
+#include <qbot/NLPRes.h>
+#include <qbot/GuiRes.h>
+#include <qbot/CncStatus.h>
 
 #include <iostream>  //declaring variables
 #include <string>
@@ -18,7 +21,9 @@ private:
 	ros::Publisher navPub_;
 	ros::Publisher spcPub_;
 	ros::Subscriber navSub_;
-	ros::Subscriber spcSub_;
+	//ros::Subscriber spcSub_;
+	ros::Subscriber nlpSub_;
+	ros::Subscriber guiSub_;
 	uint8_t qnum;
 	std::string response;
 	//std::vector<std::string>& qnlist;
@@ -28,7 +33,9 @@ public:
 		navPub_ = n.advertise<qbot::NavCmd>("/CNC_2_NAV", bufferSize);
 		spcPub_ = n.advertise<qbot::SpcCmd>("/CNC_2_SPC", bufferSize);
 		navSub_ = n.subscribe("/NAV_2_CNC", bufferSize, &Command_Node::navCallback, this);
-		spcSub_ = n.subscribe("/SPC_2_CNC", bufferSize, &Command_Node::spcCallback, this);
+		//spcSub_ = n.subscribe("/SPC_2_CNC", bufferSize, &Command_Node::spcCallback, this);
+		nlpSub_ = n.subscribe("/NLP_2_CNC", bufferSize, &Command_Node::nlpCallback, this);
+		guiSub_ = n.subscribe("/GUI_2_CNC", bufferSize, &Command_Node::guiCallback, this);
 		
 		qnum=0;
 		
@@ -36,11 +43,48 @@ public:
 		
 	}
 	
+	void guiCallback(const qbot::GuiRes& guires){
+		
+		if(guires.cmdcode==100){
+			qbot::NavCmd navcmd;
+			navcmd.status = 0; // tell it to stop
+			navPub_.publish(navcmd);
+			
+			qbot::SpcCmd spccmd;
+			spccmd.question = "Hang on, something has gone wrong. Sorry about that.";
+			spcPub_.publish(spccmd);
+		
+			ROS_INFO("QBot Emergency ABORT");
+			sys_state = 100; // ALERT OPERATOR
+		}
+		else if(guires.cmdcode==101){
+			ROS_INFO("QBot RESET");
+			sys_state = 0;
+			qnum = 0;
+		}
+		else if(guires.cmdcode==1 && sys_state==0){
+			ROS_INFO("QBot Activated");
+			sys_state = 1;
+		}
+		
+		
+		// TODO: vvv confirm what triggers the introduction
+		if(guires.cmdcode==200 && sys_state==11){
+			qbot::SpcCmd spccmd;
+			spccmd.question = "Hello, what is your name?";
+			spcPub_.publish(spccmd);
+			
+			ROS_INFO("Introducing...\n");
+			
+			sys_state = 20; // 20: able to start question
+		}
+	
+	}
+	
 	void navCallback(const qbot::NavRes& navres){
-		// TODO: insert process flow logic here
 		
 		//if not navigating or not reached
-		if(navres.status!=1 && sys_state==0){
+		if(navres.status!=1 && sys_state==1){
 			qbot::NavCmd navcmd;
 			navcmd.status = 1; // tell it to move
 			navcmd.floor = 1;
@@ -50,7 +94,7 @@ public:
 			ROS_INFO("Start Navigation...");
 			sys_state = 10;
 		}
-		else{
+		else if(sys_state==10){
 			qbot::NavCmd navcmd;
 			navcmd.status = 0; // tell it to stop
 			navPub_.publish(navcmd);
@@ -61,41 +105,66 @@ public:
 		
 	}
 	
-	void spcCallback(const qbot::SpcRes& spcres){
-		// TODO: insert process flow logic here
-		if(spcres.status==0 && sys_state==11){
-			qbot::SpcCmd spccmd;
-			spccmd.question = "Hello, what is your name?";
-			ROS_INFO("Introducing...\n");
-			spcPub_.publish(spccmd);
-			
-			sys_state = 20; // 20: able to start question
-		}
-		else if(spcres.status==1 && sys_state==20){
-			response = spcres.response;
+	void nlpCallback(const qbot::NLPRes& nlpres){
+		
+		
+		if(nlpres.res_type==0 && sys_state==20){
+			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
 			qbot::SpcCmd spccmd;			
 			spccmd.question = questions.at(qnum);
-			ROS_INFO("QBot: %s ", questions[qnum].c_str());
-			qnum++;
 			spcPub_.publish(spccmd);
+			ROS_INFO("QBot: %s ", questions[qnum].c_str());
 			
 			sys_state = 21; // 21: In progress with questioning
 		}
-		else if(spcres.status==1 && sys_state==21){
-			response = spcres.response;
+		else if(nlpres.res_type==0 && sys_state==21){
+			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
-			if(qnum < (int)questions.size()){
+			qnum++;
+			
+			if(qnum < (int)questions.size()){	
 				qbot::SpcCmd spccmd;			
 				spccmd.question = questions.at(qnum);
-				ROS_INFO("QBot: %s ", questions[qnum].c_str());
-				qnum++;
 				spcPub_.publish(spccmd);
+				ROS_INFO("QBot: %s ", questions[qnum].c_str());
 			}
 			else sys_state=22; // finished
 		}
+		else if(nlpres.res_type==1 && sys_state==21){
+			response = nlpres.response;
+			ROS_INFO("Reply: %s \n", response.c_str());
+			
+			// Got gibberish; ask same question again
+			qbot::SpcCmd spccmd;			
+			spccmd.question = questions.at(qnum);
+			spcPub_.publish(spccmd);
+			ROS_INFO("QBot: %s ", questions[qnum].c_str());
+		}
+		
+		
+		//Other responses
+		if(nlpres.res_type==3){
+			qbot::SpcCmd spccmd;
+			spccmd.question = "Okay, we will take a short break";
+			spcPub_.publish(spccmd);
+			
+			ROS_INFO("Taking break...\n");
+			
+			sys_state = 203; // 203: able to start question
+		}
+		if(nlpres.res_type==4){
+			qbot::SpcCmd spccmd;
+			spccmd.question = "Hang on, I will contact the nurse";
+			spcPub_.publish(spccmd);
+			
+			ROS_INFO("Contact Nurse...\n");
+			
+			sys_state = 204; // 203: able to start question
+		}
+		
 	}
 
 };
@@ -129,8 +198,31 @@ int main(int argc, char** argv){
 	ros::NodeHandle n;
 	
 	Command_Node cmdnode(n);
-	
 	ROS_INFO("Command Node Started");
-	ros::spin();
+	
+	ros::Publisher cncPub_ = n.advertise<qbot::CncStatus>("/CNC_STATUS", bufferSize);
+	ros::Rate loop_rate(10);
+	
+	while(ros::ok()){
+	
+		qbot::CncStatus cncstatus;
+		cncstatus.sys_state = sys_state;
+		cncPub_.publish(cncstatus);
+	
+		ros::spinOnce();
+		
+		loop_rate.sleep();
+	}
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
