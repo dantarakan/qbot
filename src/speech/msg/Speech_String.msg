@@ -1,0 +1,1 @@
+string Speech_String
