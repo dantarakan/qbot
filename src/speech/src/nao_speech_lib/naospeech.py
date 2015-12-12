@@ -25,11 +25,56 @@
 #
 
 import rospy
-from speech.msg import Speech_String # ros function, import 'Speech_String' type
+import time
+from speech.msg import SpcCmd # ros function, import 'Speech_String' type
 from naoqi import ALModule, ALProxy # microphone and speaker
 import alsaaudio # signal processing, a python module
+from speech.msg import NLPRes
 
 
+
+def reg(mic, IP, wordlist):
+    
+    #global mic
+    
+    mic.start()
+    
+    
+  
+    asr = ALProxy('ALSpeechRecognition', IP, 9559)
+    mem = ALProxy('ALMemory', IP, 9559)
+    
+    
+    
+    asr.setLanguage('English')
+    
+
+    
+    asr.setVocabulary(wordlist, True)
+    
+    
+    asr.subscribe('hello')
+    mem.subscribeToEvent('e','WordRecognized', 'WordRecognized')
+    
+    time.sleep(10)
+    
+    rospy.loginfo(mem.getData('WordRecognized'))
+    pub = rospy.Publisher('/NLP_2_CNC', NLPRes, queue_size=1000)
+    rospy.sleep(1)
+    pub.publish(str(mem.getData('WordRecognized')[0]), 0)
+    rospy.loginfo('finished---------------')
+    
+    #rospy.loginfo('-------\n'+str(type(['mem.WordRecognized']))+'\n\n')
+   # rospy.loginfo(['h', 'e'])
+    #rospy.loginfo(mem['WordRecognized'])
+    #njm.sayString(mem.WordRecognized)
+    mem.removeData('WordRecognized')
+    mem.unsubscribeToEvent('e', 'WordRecognized')
+    asr.unsubscribe('hello')
+    
+    
+    
+    mic.stop()
 
 class NaoMic(ALModule):
     '''
@@ -77,15 +122,19 @@ class NaoMic(ALModule):
 
 
 class NaoSpeech:
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, mic, wordlist):
         rospy.loginfo('test: hello')
         self.__proxy = ALProxy("ALTextToSpeech", ip, port)
         self.__subs = rospy.Subscriber("/CNC_2_SPC", SpcCmd, self.say)
+        self.ip = ip
+        self.wordlist = wordlist
+        self.mic = mic
 
 
     def say(self, msg):
     	rospy.loginfo(msg.question+ '0')
         self.__proxy.say( msg.question)
+        reg(self.mic,self.ip,  self.wordlist)
         #rospy.loginfo(msg.Speech_String+ '1')
         #self.__proxy.sayToFile("This is another sample text", "/tmp/sample_text.wav")
         #rospy.loginfo(msg.Speech_String+ '2')

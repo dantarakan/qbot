@@ -37,7 +37,6 @@ class _Constants:
 
 class MoveNao:
     def __init__(self, ip, port):
-
         self.__proxy = ALProxy("ALMotion", ip, port)
         self.__proxyPosture = ALProxy("ALRobotPosture", ip, port)
         self.__walk_sub = rospy.Subscriber(

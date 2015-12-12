@@ -8,6 +8,9 @@
  	<!-- <param name="qnfilepath" command="'$(find qbot)/src/questions.txt'"/> -->
  </node>
  
+ 
+ <include file="/home/human/catkin_ws/src/speech/launch/speech.launch" />
+ 
  <!-- 
  <include file="/opt/extra_ws/src/nao_puppet/launch/nao_puppet.launch" />
  -->
