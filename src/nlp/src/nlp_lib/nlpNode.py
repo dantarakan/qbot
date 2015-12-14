@@ -44,8 +44,21 @@ class NLP:
 		elif 'nurse' in msg.response:
 			response.res_type = 4
 		else:
-			response.response = self.getAnswer(msg.response)
+			answer = self.getAnswerWIT(msg.response)
+			readyAnswer = self.prepareAnswer(answer)
+			rospy.logwarn(readyAnswer)
+			readyAnswerJSON = json.encode(readyAnswer)
+			
+			response.response = readyAnswerJSON
 			response.res_type = 0
+
+			# if readyAnswer[0] == 'string':
+			# 	response.response = readyAnswer
+			# 	response.res_type = 0
+			# elif readyAnswer[0] == 'ate':
+			# 	response = AteRes()
+
+
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
 		
@@ -56,29 +69,57 @@ class NLP:
 		self.question = msg.question;
 		rospy.logwarn("NLP received from CNC:\n state: %d \n qustion: %s\n", self.sys_state, self.question)
 
-    def getAnswer(self, response):
-	response = urllib.quote(response)
-	pp = pprint.PrettyPrinter(indent=4)
+    def getAnswerWIT(self, response):
+		response = urllib.quote(response)
+		pp = pprint.PrettyPrinter(indent=4)
 
-	c = pycurl.Curl()
+		c = pycurl.Curl()
 
-	storage = StringIO()
+		storage = StringIO()
 
-	c.setopt(c.URL, "https://api.wit.ai/message?v=20151201&q=" + response)
-	c.setopt(c.HTTPHEADER, ['Authorization: Bearer ZENOTRIDSMPNDKSMH33QGZZPREYJX5K5'])
-	c.setopt(c.WRITEFUNCTION, storage.write)
-	c.perform()
-	c.close()
+		c.setopt(c.URL, "https://api.wit.ai/message?v=20151201&q=" + response)
+		c.setopt(c.HTTPHEADER, ['Authorization: Bearer ZENOTRIDSMPNDKSMH33QGZZPREYJX5K5'])
+		c.setopt(c.WRITEFUNCTION, storage.write)
+		c.perform()
+		c.close()
 
-	try:
-		resultJSON = json.loads(storage.getvalue())
-		#pp.pprint(resultJSON)
-		rospy.logwarn(resultJSON['outcomes'])
-		if (float(resultJSON['outcomes'][0]['confidence']) > CONFIDENCE_VALUE):
-			
-			return resultJSON['outcomes'][0]['intent']
-		else:
+		try:
+			resultJSON = json.loads(storage.getvalue())
+			#pp.pprint(resultJSON)
+			rospy.logwarn(resultJSON['outcomes'])
+			if (float(resultJSON['outcomes'][0]['confidence']) > CONFIDENCE_VALUE):
+				return resultJSON['outcomes'][0]
+			else:
+				return ""
+		except:
 			return ""
-	except:
-		return ""
 
+    def prepareAnswer(self, answer):
+		intent = answer['intent']
+		entities = answer['entities']
+		record = []
+		#rospy.logwarn(entities)
+		if(intent == 'am'):
+			if 'age_of_person' in entities:
+				record.append('age')
+				record.append(entities['age_of_person'][0]['value'])
+		elif(intent == 'ate'):
+			record.append('ate')
+			record.append([])
+			record.append([])
+			record.append([])
+			if 'food' in entities:
+				for item in entities['food']:
+					record[1].append(item['value'])
+			if 'drink' in entities:
+				for item in entities['drink']:
+					record[2].append(item['value'])
+			if 'datetime' in entities:
+				for item in entities['datetime']:
+					record[3].append(item['value'])
+		elif(intent == 'yes')
+			record.append('yes')
+		elif(intent == 'deny')
+			record.append('no')
+
+		return record
