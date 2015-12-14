@@ -6,15 +6,17 @@ import pycurl, urllib, json, pprint, time, datetime
 from nlp.msg import SpcCmd
 from nlp.msg import SpcNLP
 from nlp.msg import NLPRes
+from nlp.msg import CncStatus
 from std_msgs.msg import String
 
 CONFIDENCE_VALUE = 0.5
 
 class _Constants:
-	questionDict = {'How are you?': 'state', 'What is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'};
+    questionDict = {'How are you?': 'state', 'What is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
     SpcNLP_topic = "SPC_2_NLP"
     NLPCnc_topic = "NLP_2_CNC"
     CncSpc_topic = "CNC_2_SPC"
+    CncStatus_topic = "CNC_STATUS"
 
 class NLP:
     def __init__(self):
@@ -30,6 +32,11 @@ class NLP:
 		self.__CncSpc_sub = rospy.Subscriber(
 			_Constants.CncSpc_topic,
 			SpcCmd,
+			self.setQuestion)
+
+		self.__CncStatus_sub = rospy.Subscriber(
+			_Constants.CncStatus_topic,
+			CncStatus,
 			self.setState)
             
     def getMessage(self, msg):
@@ -51,32 +58,30 @@ class NLP:
 
 			expected = questionDict[self.question]
 
-			if(readyAnswer == 'error' || not readyAnswer):
+			if(readyAnswer == 'error' or not readyAnswer):
 				if self.sys_state == 21:
 					response.res_type = 1
 				else:
 					response.res_type = 2
-			elif(readyAnswer[0] == 'ate' && (expected == 'ate' || expected == 'drunk')):
-				
-			elif(readyAnswer[0] == expected || ((readyAnswer[0] == 'yes' || readyAnswer[0] == 'no') && expected == 'yn'))
+			elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
+				response.res_type = 0
+			elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
 				response.response = readyAnswer[0]
 				response.res_type = 0
-
-
-			readyAnswerJSON = json.encode(readyAnswer)
-			response.response = readyAnswerJSON
-			response.res_type = 0
-
 
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
 		
 
+    def setQuestion(self, msg):
+		# Capture system state and current question
+		self.question = msg.question;
+		rospy.logwarn("NLP received from CNC:\n qustion: %s\n", self.question)
+
     def setState(self, msg):
 		# Capture system state and current question
 		self.sys_state = msg.sys_state;
-		self.question = msg.question;
-		rospy.logwarn("NLP received from CNC:\n state: %d \n qustion: %s\n", self.sys_state, self.question)
+		#rospy.logwarn("NLP received from CNC:\n state: %d\n", self.sys_state)
 
     def getAnswerWIT(self, response):
 		response = urllib.quote(response)

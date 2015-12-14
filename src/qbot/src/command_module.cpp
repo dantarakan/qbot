@@ -87,7 +87,8 @@ public:
 			ros::Duration(10).sleep();
 		
 			qbot::SpcCmd spccmd;
-			spccmd.question = "Hello QBot, what is your name?";
+			//spccmd.question = "Hello I am QBot, what is your name?";
+			spccmd.question = questions.at(qnum);
 			spcPub_.publish(spccmd);
 			
 			ROS_INFO("Introducing...\n");

@@ -65,7 +65,7 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-add_message_files( DIRECTORY msg FILES NLPRes.msg SpcCmd.msg SpcNLP.msg )
+add_message_files( DIRECTORY msg FILES NLPRes.msg SpcCmd.msg SpcNLP.msg CncStatus.msg)
 generate_messages( DEPENDENCIES std_msgs )
 
 ################################################

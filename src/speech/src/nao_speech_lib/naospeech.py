@@ -27,9 +27,10 @@
 import rospy
 import time, subprocess
 from speech.msg import SpcCmd # ros function, import 'Speech_String' type
+from speech.msg import SpcNLP
 from naoqi import ALModule, ALProxy # microphone and speaker
 import alsaaudio # signal processing, a python module
-from speech.msg import NLPRes
+#from speech.msg import NLPRes
 #from real_time import real_time_recog
 
 '''
@@ -97,12 +98,12 @@ def runProcess(cmd):
 
 
 def reg():
-    pub = rospy.Publisher('/NLP_2_CNC', NLPRes, queue_size=1000)
+    pub = rospy.Publisher('/SPC_2_NLP', SpcNLP, queue_size=1000)
     rospy.sleep(1)
     #s = runProcess('')
     #s = runProcess('sudo python /home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py')
     s = runProcess(['sudo', 'python', '/home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py'])
-    pub.publish(str(s), 0)
+    pub.publish(str(s))
 
 
 
