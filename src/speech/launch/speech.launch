@@ -2,7 +2,7 @@
   <!--Get arguments at launch time-->
   <!--Use the line below to connect to actual NAO-->
   <!--<arg name="nao_ip" default="10.0.0.145"/>-->
-  <arg name="nao_ip" default="192.168.1.138"/>
+  <arg name="nao_ip" default="172.20.10.8"/>
   <arg name="nao_port" default="9559" />
 
   <!-- Set parameters -->
@@ -10,5 +10,5 @@
   <param name="nap_port" value="$(arg nao_port)" />
 
   <!--Launch all NAO puppet nodes -->
-  <node pkg="speech" type="naospeech_node.py" name="NaoSpeech" required="true"  />
+  <node pkg="speech" type="naospeech_node.py" name="NaoSpeech" required="true" />
 </launch>

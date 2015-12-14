@@ -22,4 +22,4 @@
 #
 #
 
-from naospeech import NaoMic, NaoSpeech, reg
+from naospeech import NaoMic, NaoSpeech

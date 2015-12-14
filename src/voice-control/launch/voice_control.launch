@@ -1,3 +1,0 @@
-<launch>
-    <node name="voice_control_server" pkg="voice_control" type="voice_control_server.py" />
-</launch>

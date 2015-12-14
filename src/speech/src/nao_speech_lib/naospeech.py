@@ -25,14 +25,14 @@
 #
 
 import rospy
-import time
+import time, subprocess
 from speech.msg import SpcCmd # ros function, import 'Speech_String' type
 from naoqi import ALModule, ALProxy # microphone and speaker
 import alsaaudio # signal processing, a python module
 from speech.msg import NLPRes
+#from real_time import real_time_recog
 
-
-
+'''
 def reg(mic, IP, wordlist):
     
     #global mic
@@ -75,6 +75,36 @@ def reg(mic, IP, wordlist):
     
     
     mic.stop()
+'''
+
+def runProcess(cmd):    
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process.wait()
+    s = process.stdout.read()
+    a = s.split('\n')
+    rospy.loginfo(a)
+    out = ''
+    for i in a:#
+        rospy.loginfo(i)
+        if i.find('::::')>=0:
+            out = i.split('::::')[1]
+        if i.find('????')>=0:
+            out = 'Google refused to recognise this speech or\nGoogle cannot understand what you said.'
+        if i.find(';;;;')>=0:
+            out = 'Could not request results from Google Speech Recognition service'
+    
+    return out
+
+
+def reg():
+    pub = rospy.Publisher('/NLP_2_CNC', NLPRes, queue_size=1000)
+    rospy.sleep(1)
+    #s = runProcess('')
+    #s = runProcess('sudo python /home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py')
+    s = runProcess(['sudo', 'python', '/home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py'])
+    pub.publish(str(s), 0)
+
+
 
 class NaoMic(ALModule):
     '''
@@ -134,7 +164,9 @@ class NaoSpeech:
     def say(self, msg):
     	rospy.loginfo(msg.question+ '0')
         self.__proxy.say( msg.question)
-        reg(self.mic,self.ip,  self.wordlist)
+        
+        #reg(self.mic,self.ip,  self.wordlist)
+        reg()
         #rospy.loginfo(msg.Speech_String+ '1')
         #self.__proxy.sayToFile("This is another sample text", "/tmp/sample_text.wav")
         #rospy.loginfo(msg.Speech_String+ '2')

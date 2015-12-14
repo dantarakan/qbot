@@ -29,13 +29,13 @@ import rospy,time
 #import nao_move_lib.MoveNao
 from naoqi import ALBroker
 from naoqi import ALModule, ALProxy
-from nao_speech_lib import NaoMic, NaoSpeech, reg
+from nao_speech_lib import NaoMic, NaoSpeech
 
 
 msg_topic = "NaoSpeech"
-IP = "192.168.1.138"
+IP = "172.20.10.8"
 
-wordlist = ['yes fine', 'my name', 'eight', 'one']
+wordlist = ['yes fine', 'i', 'am', 'yes', 'my name is', 'my name', 'eight', 'one']
 
 
 
