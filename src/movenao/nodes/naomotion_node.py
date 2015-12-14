@@ -33,7 +33,7 @@ if __name__ == "__main__":
     rospy.init_node("MoveNao", sys.argv)
 
     #Get parameters
-    ip = rospy.get_param("nao_ip", "127.0.0.1")
+    ip = rospy.get_param("nao_ip", "192.168.1.125")
     port = rospy.get_param("nao_port", 9559)
 
     njm = MoveNao(ip, port)

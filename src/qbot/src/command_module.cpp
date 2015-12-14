@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <qbot/NavCmd.h>
 #include <qbot/SpcCmd.h>
 #include <qbot/NavRes.h>
@@ -20,6 +21,7 @@ class Command_Node{
 private:
 	ros::Publisher navPub_;
 	ros::Publisher spcPub_;
+	ros::Publisher movenaoPub_;
 	ros::Subscriber navSub_;
 	//ros::Subscriber spcSub_;
 	ros::Subscriber nlpSub_;
@@ -32,6 +34,7 @@ public:
 	Command_Node(ros::NodeHandle& n){
 		navPub_ = n.advertise<qbot::NavCmd>("/CNC_2_NAV", bufferSize);
 		spcPub_ = n.advertise<qbot::SpcCmd>("/CNC_2_SPC", bufferSize);
+		movenaoPub_ = n.advertise<std_msgs::String>("/posture", bufferSize);
 		navSub_ = n.subscribe("/NAV_2_CNC", bufferSize, &Command_Node::navCallback, this);
 		//spcSub_ = n.subscribe("/SPC_2_CNC", bufferSize, &Command_Node::spcCallback, this);
 		nlpSub_ = n.subscribe("/NLP_2_CNC", bufferSize, &Command_Node::nlpCallback, this);
@@ -61,6 +64,12 @@ public:
 			ROS_INFO("QBot RESET");
 			sys_state = 0;
 			qnum = 0;
+			
+			std_msgs::String msg;
+			msg.data = "Sit";
+			movenaoPub_.publish(msg);
+			ros::Duration(5).sleep();
+			
 		}
 		else if(guires.cmdcode==1 && sys_state==0){
 			ROS_INFO("QBot Activated");
@@ -70,8 +79,15 @@ public:
 		
 		// TODO: vvv confirm what triggers the introduction
 		if(guires.cmdcode==200 && sys_state==11){
+		
+		    std_msgs::String msg;
+			msg.data = "Stand";
+			movenaoPub_.publish(msg);
+			
+			ros::Duration(10).sleep();
+		
 			qbot::SpcCmd spccmd;
-			spccmd.question = "Hello, what is your name?";
+			spccmd.question = "Hello QBot, what is your name?";
 			spcPub_.publish(spccmd);
 			
 			ROS_INFO("Introducing...\n");
@@ -112,7 +128,12 @@ public:
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
-			qbot::SpcCmd spccmd;			
+			qbot::SpcCmd spccmd;
+			
+			spccmd.question = "Nice to meet you " + response;
+			spcPub_.publish(spccmd);
+			ROS_INFO("QBot: Nice to meet you" );
+					
 			spccmd.question = questions.at(qnum);
 			spcPub_.publish(spccmd);
 			ROS_INFO("QBot: %s ", questions[qnum].c_str());
@@ -139,7 +160,7 @@ public:
 			
 			// Got gibberish; ask same question again
 			qbot::SpcCmd spccmd;			
-			spccmd.question = questions.at(qnum);
+			spccmd.question = "Sorry I didn't catch that, " + questions.at(qnum);
 			spcPub_.publish(spccmd);
 			ROS_INFO("QBot: %s ", questions[qnum].c_str());
 		}
