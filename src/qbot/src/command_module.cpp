@@ -86,14 +86,15 @@ public:
 			movenaoPub_.publish(msg);
 			
 			ros::Duration(10).sleep();*/
+			
+			sys_state = 20; // 20: able to start question
 		
 			qbot::SpcCmd spccmd;
 			spccmd.question = "Hello I am QBot, what is your name?";
 			spcPub_.publish(spccmd);
 			
 			ROS_INFO("Introducing...\n");
-			
-			sys_state = 20; // 20: able to start question
+
 		}
 	
 	}
@@ -126,6 +127,9 @@ public:
 		
 		
 		if(sys_state==20){
+		
+		    sys_state = 21; // 21: Checking to start
+		    
 			if(nlpres.res_type==0){
 				response = nlpres.response;
 				ROS_INFO("Reply: %s \n", response.c_str());
@@ -142,7 +146,6 @@ public:
 				ROS_INFO("QBot: Nice to meet you" );
 			}
 			
-			sys_state = 21; // 21: Checking to start
 		}
 		else if(sys_state==21){
 			if(nlpres.res_type==0){
@@ -150,11 +153,12 @@ public:
 				ROS_INFO("Reply: %s \n", response.c_str());
 				
 				if(response.compare("yes") == 0){
+				    sys_state = 22; // 22 In progress with questioning
+				    
 					qbot::SpcCmd spccmd;			
 					spccmd.question = questions.at(qnum);
 					spcPub_.publish(spccmd);
 					ROS_INFO("QBot: %s ", questions[qnum].c_str());
-					sys_state = 22; // 22 In progress
 				}
 				else{
 					qbot::SpcCmd spccmd;
@@ -170,8 +174,7 @@ public:
 				ROS_INFO("QBot: Are you ready to Start?" );
 			}
 		}
-		
-		else if(nlpres.res_type==0 && sys_state==22){
+		else if(sys_state==22 && nlpres.res_type==0){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
