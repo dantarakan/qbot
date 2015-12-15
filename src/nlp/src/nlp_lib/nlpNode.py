@@ -109,7 +109,7 @@ class NLP:
 					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
-					if readyAnswer[0] == 'name' and (readyAnswer[1] == 'Janice' or readyAnswer[1] == 'Jonas'):
+					if readyAnswer[0] == 'name' and (readyAnswer[1] == 'Janice' or readyAnswer[1] == 'Jonas' or readyAnswer[1] == 'Janet' or readyAnswer[1] == 'Alice'):
 						response.response = 'Yannis'
 					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z'):
 						response.response = 'Zee'
@@ -199,8 +199,8 @@ class NLP:
 					datetimes.append(item['value'])
 				if datetimes.count == 2:
 					# Calc the difference
-					convTime1 = datetime.datetime.strptime(datetimes[0], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
-					convTime2 = datetime.datetime.strptime(datetimes[1], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
+					convTime1 = datetime.datetime.strptime(datetimes[0], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
+					convTime2 = datetime.datetime.strptime(datetimes[1], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
 					difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
 					record.append(difference)
 				else:

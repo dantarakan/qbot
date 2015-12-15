@@ -43,7 +43,7 @@ public:
 		
 		qnum=0;
 		
-		outfile.open("PatientResponses01.txt");
+		outfile.open("/home/human/catkin_ws/src/qbot/src/PatientResponses01.txt");
 		
 		// TODO: insert logic to enter starting parameters like bed ward etc
 		
@@ -162,6 +162,8 @@ public:
 					spccmd.question = questions.at(qnum);
 					spcPub_.publish(spccmd);
 					ROS_INFO("QBot: %s ", questions[qnum].c_str());
+					
+					outfile << "Question: " << questions.at(qnum) << std::endl;
 				}
 				else{
 					qbot::SpcCmd spccmd;
@@ -183,13 +185,15 @@ public:
 			
 			qnum++;
 			
-			outfile << qnum << ") " << response << std::endl;
+			outfile << "Reply: " << response << std::endl;
 			
-			if(qnum < (int)questions.size()){	
+			if(qnum < ((int)questions.size()-1)){	
 				qbot::SpcCmd spccmd;			
 				spccmd.question = questions.at(qnum);
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: %s ", questions[qnum].c_str());
+				
+				outfile << "Question: " << questions.at(qnum) << std::endl;
 			}
 			else{
 			    outfile << "-----===== END =====-----" << std::endl;
