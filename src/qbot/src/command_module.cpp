@@ -78,13 +78,14 @@ public:
 		
 		
 		// TODO: vvv confirm what triggers the introduction
-		if(guires.cmdcode==200 && sys_state==11){
-		
+		if((guires.cmdcode==200 && sys_state==11) || (guires.cmdcode==250) ){
+			
+			/*
 		    std_msgs::String msg;
 			msg.data = "Stand";
 			movenaoPub_.publish(msg);
 			
-			ros::Duration(10).sleep();
+			ros::Duration(10).sleep();*/
 		
 			qbot::SpcCmd spccmd;
 			//spccmd.question = "Hello I am QBot, what is your name?";
@@ -125,7 +126,7 @@ public:
 	void nlpCallback(const qbot::NLPRes& nlpres){
 		
 		
-		if(nlpres.res_type==0 && sys_state==20){
+		if((nlpres.res_type==0||nlpres.res_type==2)  && sys_state==20){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
@@ -134,7 +135,9 @@ public:
 			spccmd.question = "Nice to meet you " + response;
 			spcPub_.publish(spccmd);
 			ROS_INFO("QBot: Nice to meet you" );
-					
+			
+			qnum++;
+			
 			spccmd.question = questions.at(qnum);
 			spcPub_.publish(spccmd);
 			ROS_INFO("QBot: %s ", questions[qnum].c_str());

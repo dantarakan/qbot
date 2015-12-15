@@ -90,7 +90,7 @@ def runProcess(cmd):
         if i.find('::::')>=0:
             out = i.split('::::')[1]
         if i.find('????')>=0:
-            out = 'Google refused to recognise this speech or\nGoogle cannot understand what you said.'
+            out = 'Google refused to recognise this speech or Google cannot understand what you said.'
         if i.find(';;;;')>=0:
             out = 'Could not request results from Google Speech Recognition service'
     

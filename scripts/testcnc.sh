@@ -3,12 +3,12 @@
 rostopic list
 
 rostopic pub -1 /GUI_2_CNC qbot/GuiRes 101
-rostopic pub -1 /GUI_2_CNC qbot/GuiRes 1
+#rostopic pub -1 /GUI_2_CNC qbot/GuiRes 1
 
-rostopic pub -1 /NAV_2_CNC qbot/NavRes 0
-rostopic pub -1 /NAV_2_CNC qbot/NavRes 1
+#rostopic pub -1 /NAV_2_CNC qbot/NavRes 0
+#rostopic pub -1 /NAV_2_CNC qbot/NavRes 1
 
-rostopic pub -1 /GUI_2_CNC qbot/GuiRes 200
+rostopic pub -1 /GUI_2_CNC qbot/GuiRes 250
 
 #rostopic pub -1 /NLP_2_CNC qbot/NLPRes "Yiannis" 0
 #rostopic pub -1 /NLP_2_CNC qbot/NLPRes "Woooloolololoooo!" 1

@@ -53,21 +53,40 @@ class NLP:
 			response.res_type = 4
 		else:
 			answer = self.getAnswerWIT(msg.response)
-			readyAnswer = self.prepareAnswer(answer)
-			rospy.logwarn(readyAnswer)
-
-			expected = questionDict[self.question]
-
-			if(readyAnswer == 'error' or not readyAnswer):
+			if not answer:
 				if self.sys_state == 21:
 					response.res_type = 1
 				else:
 					response.res_type = 2
-			elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
-				response.res_type = 0
-			elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
-				response.response = readyAnswer[0]
-				response.res_type = 0
+			else:
+				readyAnswer = self.prepareAnswer(answer)
+				rospy.logwarn(readyAnswer)
+				rospy.logwarn(self.question)
+				rospy.logwarn(self.question[27:])
+				
+				expected = ''
+				try:
+					expected = _Constants.questionDict[self.question]
+				except:
+					try:
+						expected = _Constants.questionDict[self.question[27:]]
+					except:
+						if self.sys_state == 21:
+							response.res_type = 1
+						else:
+							response.res_type = 2
+				rospy.logwarn(expected)
+
+				if(readyAnswer == 'error' or not readyAnswer):
+					if self.sys_state == 21:
+						response.res_type = 1
+					else:
+						response.res_type = 2
+				elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
+					response.res_type = 0
+				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
+					response.response = str(readyAnswer[1])
+					response.res_type = 0
 
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
@@ -100,6 +119,7 @@ class NLP:
 		try:
 			resultJSON = json.loads(storage.getvalue())
 			#pp.pprint(resultJSON)
+			rospy.logwarn("resultJSON[outcomes]:")
 			rospy.logwarn(resultJSON['outcomes'])
 			if (float(resultJSON['outcomes'][0]['confidence']) > CONFIDENCE_VALUE):
 				return resultJSON['outcomes'][0]
@@ -109,6 +129,8 @@ class NLP:
 			return ""
 
     def prepareAnswer(self, answer):
+		rospy.logwarn("Answer:")
+		rospy.logwarn(answer)
 		intent = answer['intent']
 		entities = answer['entities']
 		record = []
@@ -147,13 +169,13 @@ class NLP:
 			elif 'datetime' in entities:
 				for item in entities['datetime']:
 					datetime.append(item['value'])
-			if datetime.count == 2:
-				# Calc the difference
-				convTime1 = datetime.datetime.strptime(datetime[0], "%d %B %Y at %H:%M:%S %Z").timetuple()
-				convTime2 = datetime.datetime.strptime(datetime[1], "%d %B %Y at %H:%M:%S %Z").timetuple()
-				difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
-				record.append(difference)
-			else:
-				return 'error'
+				if datetime.count == 2:
+					# Calc the difference
+					convTime1 = datetime.datetime.strptime(datetime[0], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					convTime2 = datetime.datetime.strptime(datetime[1], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
+					record.append(difference)
+				else:
+					return 'error'
 
 		return record

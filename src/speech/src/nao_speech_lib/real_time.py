@@ -14,8 +14,8 @@ def real_time_recog():
 	try:
 		# for testing purposes, we're just using the default API key
 		# to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
-		# instead of `r.recognize_google(audio)`
-		s = r.recognize_google(audio, key='AIzaSyDJMVC1D6xIF96bVDxRkYivo-tPr_Ps0W4')
+		# instead of `r.recognize_google(audio)` key='AIzaSyDJMVC1D6xIF96bVDxRkYivo-tPr_Ps0W4'
+		s = r.recognize_google(audio)
 		print("::::" + s)#, ))
 		return s
 	except sr.UnknownValueError:
