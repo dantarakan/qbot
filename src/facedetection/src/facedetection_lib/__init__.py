@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (c) 2014 Miguel Sarabia
 # Imperial College London
 #
@@ -24,19 +22,5 @@
 #
 #
 
-import sys
-import rospy
-#import nao_move_lib.MoveNao
-from nao_move_lib import MoveNao
-
-if __name__ == "__main__":
-    rospy.init_node("MoveNao", sys.argv)
-
-    #Get parameters
-    ip = rospy.get_param("nao_ip", "172.20.10.8")
-    port = rospy.get_param("nao_port", 9559)
-
-    njm = MoveNao(ip, port)
-    rospy.loginfo("NaoMotion started")
-    rospy.spin()
-    rospy.loginfo("NaoMotion stopped")
+from .naosoundtracking import NaoSoundTrack
+from .naofacetracking import NaoFaceTrack

@@ -25,18 +25,29 @@
 #
 
 import sys
-import rospy
+import rospy,time
 #import nao_move_lib.MoveNao
-from nao_move_lib import MoveNao
-
+from naoqi import ALBroker
+from naoqi import ALModule, ALProxy
+from facedetection_lib import NaoFaceTrack
+IP = "172.20.10.8"
+     
 if __name__ == "__main__":
-    rospy.init_node("MoveNao", sys.argv)
+    rospy.init_node('NaoFaceTrack', sys.argv)
 
     #Get parameters
-    ip = rospy.get_param("nao_ip", "172.20.10.8")
+    #use this line to connect to actual robot
+    #ip = rospy.get_param("nao_ip", "10.0.0.145")
+    ip = rospy.get_param("nao_ip", IP)
     port = rospy.get_param("nao_port", 9559)
-
-    njm = MoveNao(ip, port)
-    rospy.loginfo("NaoMotion started")
+    
+    broker = ALBroker("NaoFaceBroker", "0.0.0.0", 0, ip, port)
+    
+    global NaoFace
+    NaoFace = NaoFaceTrack(ip, port)
+    
+    rospy.loginfo(" started")
     rospy.spin()
-    rospy.loginfo("NaoMotion stopped")
+    rospy.loginfo(" stopped")
+
+    broker.shutdown()
