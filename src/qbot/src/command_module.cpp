@@ -131,13 +131,13 @@ public:
 				ROS_INFO("Reply: %s \n", response.c_str());
 			
 				qbot::SpcCmd spccmd;
-				spccmd.question = "Nice to meet you " + response + ". Are you ready to Start?";
+				spccmd.question = "Nice to meet you " + response + ". Are you ready to start?";
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: Nice to meet you [Name]" );
 			}
 			else{
 				qbot::SpcCmd spccmd;
-				spccmd.question = "Nice to meet you. Are you ready to Start?";
+				spccmd.question = "Nice to meet you. Are you ready to start?";
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: Nice to meet you" );
 			}
@@ -149,7 +149,7 @@ public:
 				response = nlpres.response;
 				ROS_INFO("Reply: %s \n", response.c_str());
 				
-				if(!(strncmp(response, "yes", 3))){
+				if(response.compare("yes") == 0){
 					qbot::SpcCmd spccmd;			
 					spccmd.question = questions.at(qnum);
 					spcPub_.publish(spccmd);
@@ -185,7 +185,7 @@ public:
 			}
 			else sys_state=30; // finished
 		}
-		else if(nlpres.res_type==1 && sys_state==22){
+		else if((nlpres.res_type==1||nlpres.res_type==2) && sys_state==22){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			

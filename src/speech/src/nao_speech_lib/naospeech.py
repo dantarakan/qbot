@@ -78,9 +78,11 @@ def reg(mic, IP, wordlist):
     mic.stop()
 '''
 
-def runProcess(cmd):    
+def runProcess(cmd):
+    rospy.logwarn('.....Start waiting........')
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     process.wait()
+    rospy.logwarn('.....Finished waiting........')
     s = process.stdout.read()
     a = s.split('\n')
     rospy.loginfo(a)

@@ -59,7 +59,9 @@ class NLP:
 				try:
 					expected = _Constants.questionDict[self.question[27:]]
 				except:
-					if self.sys_state == 21:
+					if "ready to start" in self.question:
+						expected = 'yn'
+					elif self.sys_state == 21:
 						response.res_type = 1
 					else:
 						response.res_type = 2
@@ -75,6 +77,7 @@ class NLP:
 				rospy.logwarn(readyAnswer)
 
 				if(readyAnswer == 'error' or not readyAnswer):
+					rospy.logwarn("Here 0")
 					if self.sys_state == 21:
 						response.res_type = 1
 					else:
@@ -105,9 +108,11 @@ class NLP:
 					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
+					rospy.logwarn("Here 1")
 					response.response = str(readyAnswer[1])
 					response.res_type = 0
 
+		rospy.logwarn("Here 2")
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
 		
@@ -180,7 +185,9 @@ class NLP:
 					record[3].append(item['value'])
 		elif(intent == 'yes'):
 			record.append('yes')
+			record.append('yes')
 		elif(intent == 'deny'):
+			record.append('no')
 			record.append('no')
 		elif(intent == 'sleep'):
 			record.append('sleep')
