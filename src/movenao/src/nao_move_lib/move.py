@@ -28,29 +28,26 @@ import rospy
 import time
 from naoqi import ALProxy
 import vision_definitions
-from movenao.msg import Walk_control, Face_detection
+from movenao.msg import Walk_control
+from humantrack.msg import MoveHead
 from std_msgs.msg import String
 
 
 class _Constants:
     joy_topic = "joy"
     msg_topic = "posture"
-    face_det_topic = "facedetection"
+    move_head_topic = "move_head"
     linear_factor = 0.7
     angular_factor = 0.5
-    unique_name = "nao_camera"
-    resolution = vision_definitions.kQVGA
-    colour_space = vision_definitions.kRGBColorSpace
-    fps = 5
+    head_speed = 0.2 # Between 0-1
+
+    yaw_limits = [-2.0857,  2.0857]
+    pitch_limits = [-0.6720,  0.5149]
 
 class MoveNao:
     def __init__(self, ip, port):
         self.__proxy = ALProxy("ALMotion", ip, port)
         self.__proxyPosture = ALProxy("ALRobotPosture", ip, port)
-        self.__proxyTTS = ALProxy("ALTextToSpeech", ip, port) #test only, will need to use publisher later
-        self.__proxyVideo = ALProxy("ALVideoDevice", ip, port)
-        self.__proxyFace = ALProxy("ALFaceDetection", ip, port)
-        self.__proxyMemory = ALProxy("ALMemory", ip, port)
         self.__walk_sub = rospy.Subscriber(
             _Constants.joy_topic,
             Walk_control,
@@ -59,14 +56,12 @@ class MoveNao:
         self.__subs = rospy.Subscriber(
 		    _Constants.msg_topic,
 		    String,
-		    self.go_to_posture)
-		      
-
-                
-    	self.__face_sub = rospy.Subscriber( 
-    		_Constants.face_det_topic, 
-    		Face_detection, 
-    		self.detect_face)		
+		    self.go_to_posture)	
+		    	    
+        self.__move_head_sub = rospy.Subscriber(
+            _Constants.move_head_topic,
+            MoveHead,
+            self.look )
             
     def walk(self, msg):
         angular = msg.angular
@@ -80,67 +75,30 @@ class MoveNao:
     def go_to_posture(self, msg):
         self.__proxyPosture.goToPosture(msg.data, 1.0)
         
-    def detect_face(self, msg):
-    	Foundface = False
-    	if(msg.enable):
-            rospy.loginfo("code executed here")
-            #registering VIM
-            #not sure this part is needed or handled by ALFaceDetection
-            name_id = self.__proxyVideo.subscribe(
-                _Constants.unique_name,
-                _Constants.resolution,
-                _Constants.colour_space,
-                _Constants.fps )
-            #subscribe to ALFaceDetection proxy GVM
-            Period = 500
-            self.__proxyFace.subscribe("TEST", Period, 0.0)
-            #getting video buffer
-            #getting detected result from ALMemory
-            memValue = "FaceDetected"
-            
-            for i in range(0, 20):
-                time.sleep(0.5)
-                val = self.__proxyMemory.getData(memValue)
+    def look(self, msg):
+        joint_names = ["HeadYaw", "HeadPitch"]
+        current = self.__proxy.getAngles( joint_names, False )
+        yaw = current[0] + msg.yaw
+        pitch = current[1] + msg.pitch
+        rospy.logwarn("got here 0")
+        rospy.logwarn(yaw)
+        rospy.logwarn(pitch)
+        #Make sure we don't exceed angle limits
+        if yaw < _Constants.yaw_limits[0]:
+            yaw = _Constants.yaw_limits[0]
+        elif yaw > _Constants.yaw_limits[1]:
+            yaw = _Constants.yaw_limits[1]
 
-                rospy.loginfo("***************")
-
-                # Check whether we got a valid output.
-                if(val and isinstance(val, list) and len(val) >= 2):
-                    
-                    # We detected faces !
-                    # For each face, we can read its shape info and ID.
-
-                    # First Field = TimeStamp.
-                    timeStamp = val[0]
-
-                    # Second Field = array of face_Info's.
-                    faceInfoArray = val[1]
-
-                    try:
-                        # Browse the faceInfoArray to get info on each detected face.
-                        for j in range( len(faceInfoArray)-1 ):
-                            faceInfo = faceInfoArray[j]
-
-                            # First Field = Shape info.
-                            faceShapeInfo = faceInfo[0]
-
-                            # Second Field = Extra info (empty for now).
-                            faceExtraInfo = faceInfo[1]
-                            rospy.loginfo("  alpha %.3f - beta %.3f", faceShapeInfo[1], faceShapeInfo[2])  
-                            rospy.loginfo("  alpha %.3f - beta %.3f", faceShapeInfo[3], faceShapeInfo[4])  
-                            if(Foundface):
-                                self.__proxyTTS.say("I can still see you")
-                            else:
-                                self.__proxyTTS.say("I can see you")
-                                Foundface = True
-                    except Exception, e:
-                        rospy.loginfo("faces detected, but it seems getData is invalid. ALValue ="+ val)
-                        rospy.loginfo("Error msg %s", (str(e)))
-                else:
-                    rospy.loginfo("No face detected")
-                    self.__proxyTTS.say("Adam I want to hurt you")
-                    Foundface = False
-            self.__proxyFace.unsubscribe("TEST")	
-            self.__proxyVideo.unsubscribe( name_id )
-        else:
-            rospy.loginfo("face detection disabled")
+        if pitch < _Constants.pitch_limits[0]:
+            pitch = _Constants.pitch_limits[0]
+        elif pitch > _Constants.pitch_limits[1]:
+            pitch = _Constants.pitch_limits[1]
+        rospy.logwarn("got here 1")
+        self.__proxy.setStiffnesses("Head", 1.0)
+        self.__proxy.angleInterpolationWithSpeed(
+            joint_names,
+            [ yaw, pitch ],
+            _Constants.head_speed)
+        time.sleep(0.5)
+        self.__proxy.setStiffnesses("Head", 0.0)
+        rospy.logwarn("got here 2")

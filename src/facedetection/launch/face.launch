@@ -1,0 +1,17 @@
+<launch>
+  <!--Get arguments at launch time-->
+  <!--Use the line below to connect to actual NAO-->
+  <!--<arg name="nao_ip" default="10.0.0.145"/>-->
+  <!--<arg name="nao_ip" default="172.20.10.8"/>-->
+  <arg name="nao_ip" default="172.20.10.8"/>
+  <arg name="nao_port" default="9559" />
+
+  <!-- Set parameters -->
+  <param name="nao_ip" value="$(arg nao_ip)" />
+  <param name="nap_port" value="$(arg nao_port)" />
+
+  <!--Launch all NAO puppet nodes -->
+  <node pkg="humantrack" type="facetrack_node.py" name="NaoFaceTrack" required="true" />
+  <node pkg="humantrack" type="soundtrack_node.py" name="NaoSoundTrack" required="true" />
+  <node pkg="movenao" type="naomotion_node.py" name="MoveNao" required="true"  />
+</launch>
