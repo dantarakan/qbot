@@ -12,7 +12,7 @@ from std_msgs.msg import String
 CONFIDENCE_VALUE = 0.5
 
 class _Constants:
-    questionDict = {'What is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
+    questionDict = {'Hello I am QBot, what is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
     SpcNLP_topic = "SPC_2_NLP"
     NLPCnc_topic = "NLP_2_CNC"
     CncSpc_topic = "CNC_2_SPC"
@@ -83,6 +83,7 @@ class NLP:
 					else:
 						response.res_type = 2
 				elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
+					rospy.logwarn("Here 3")
 					if expected == 'ate':
 					    foodResp = ''
 					    for index in range(len(readyAnswer[1])):
