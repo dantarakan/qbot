@@ -90,7 +90,7 @@ class NLP:
 					            foodResp += ', '
 					        except:
 					            pass
-					    response.response = foodResp[:(len(foodResp)-3)]
+					    response.response = foodResp[:(len(foodResp)-2)]
 					    response.res_type = 0
 					else:
 					    drinkResp = ''
@@ -102,7 +102,7 @@ class NLP:
 					            drinkResp += ', '
 					        except:
 					            pass
-					    response.response = drinkResp[:(len(drinkResp)-3)]
+					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
 					response.response = str(readyAnswer[1])
@@ -175,9 +175,9 @@ class NLP:
 					record[2].append(item['value'])
 			if 'datetime' in entities:
 				for item in entities['datetime']:
-					time1 = datetime.datetime.strptime(item['value'], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					#time1 = datetime.datetime.strptime(item['value'], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
 					#2015-12-16T18:00:00.000-08:00
-					record[3].append(time1)
+					record[3].append(item['value'])
 		elif(intent == 'yes'):
 			record.append('yes')
 		elif(intent == 'deny'):
@@ -192,8 +192,8 @@ class NLP:
 					datetimes.append(item['value'])
 				if datetimes.count == 2:
 					# Calc the difference
-					convTime1 = datetime.datetime.strptime(datetimes[0], "%d %B %Y at %H:%M:%S %Z").timetuple()
-					convTime2 = datetime.datetime.strptime(datetimes[1], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					convTime1 = datetime.datetime.strptime(datetimes[0], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
+					convTime2 = datetime.datetime.strptime(datetimes[1], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
 					difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
 					record.append(difference)
 				else:
