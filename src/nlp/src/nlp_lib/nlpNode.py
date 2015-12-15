@@ -12,7 +12,7 @@ from std_msgs.msg import String
 CONFIDENCE_VALUE = 0.5
 
 class _Constants:
-    questionDict = {'How are you?': 'state', 'What is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
+    questionDict = {'What is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
     SpcNLP_topic = "SPC_2_NLP"
     NLPCnc_topic = "NLP_2_CNC"
     CncSpc_topic = "CNC_2_SPC"
@@ -52,30 +52,27 @@ class NLP:
 		elif 'nurse' in msg.response:
 			response.res_type = 4
 		else:
-			answer = self.getAnswerWIT(msg.response)
-			if not answer:
+		    expected = ''
+		    try:
+		        expected = _Constants.questionDict[self.question]
+		    except:
+				try:
+					expected = _Constants.questionDict[self.question[27:]]
+				except:
+					if self.sys_state == 21:
+						response.res_type = 1
+					else:
+						response.res_type = 2
+		    rospy.logwarn(expected)
+		    answer = self.getAnswerWIT(msg.response)
+		    if not answer:
 				if self.sys_state == 21:
 					response.res_type = 1
 				else:
 					response.res_type = 2
-			else:
+		    else:
 				readyAnswer = self.prepareAnswer(answer)
 				rospy.logwarn(readyAnswer)
-				rospy.logwarn(self.question)
-				rospy.logwarn(self.question[27:])
-				
-				expected = ''
-				try:
-					expected = _Constants.questionDict[self.question]
-				except:
-					try:
-						expected = _Constants.questionDict[self.question[27:]]
-					except:
-						if self.sys_state == 21:
-							response.res_type = 1
-						else:
-							response.res_type = 2
-				rospy.logwarn(expected)
 
 				if(readyAnswer == 'error' or not readyAnswer):
 					if self.sys_state == 21:
@@ -83,7 +80,30 @@ class NLP:
 					else:
 						response.res_type = 2
 				elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
-					response.res_type = 0
+					if expected == 'ate':
+					    foodResp = ''
+					    for index in range(len(readyAnswer[1])):
+					        foodResp += readyAnswer[1][index]
+					        foodResp += ', '
+					        try:
+					            foodResp += readyAnswer[3][len(readyAnswer[3])-index]
+					            foodResp += ', '
+					        except:
+					            pass
+					    response.response = foodResp[:(len(foodResp)-3)]
+					    response.res_type = 0
+					else:
+					    drinkResp = ''
+					    for index in range(len(readyAnswer[2])):
+					        drinkResp += readyAnswer[2][index]
+					        drinkResp += ', '
+					        try:
+					            drinkResp += readyAnswer[3][len(readyAnswer[3])-index]
+					            drinkResp += ', '
+					        except:
+					            pass
+					    response.response = drinkResp[:(len(drinkResp)-3)]
+					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
 					response.response = str(readyAnswer[1])
 					response.res_type = 0
@@ -141,7 +161,7 @@ class NLP:
 				record.append(entities['age_of_person'][0]['value'])
 			elif 'name' in entities:
 				record.append('name')
-				record.append(entities['age_of_person'][0]['value'])
+				record.append(entities['name'][0]['value'])
 		elif(intent == 'ate'):
 			record.append('ate')
 			record.append([])
@@ -156,6 +176,7 @@ class NLP:
 			if 'datetime' in entities:
 				for item in entities['datetime']:
 					time1 = datetime.datetime.strptime(item['value'], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					#2015-12-16T18:00:00.000-08:00
 					record[3].append(time1)
 		elif(intent == 'yes'):
 			record.append('yes')
@@ -163,16 +184,16 @@ class NLP:
 			record.append('no')
 		elif(intent == 'sleep'):
 			record.append('sleep')
-			datetime = []
+			datetimes = []
 			if 'duration' in entities:
 				record.append(entities['duration'][0]['value'])
 			elif 'datetime' in entities:
 				for item in entities['datetime']:
-					datetime.append(item['value'])
-				if datetime.count == 2:
+					datetimes.append(item['value'])
+				if datetimes.count == 2:
 					# Calc the difference
-					convTime1 = datetime.datetime.strptime(datetime[0], "%d %B %Y at %H:%M:%S %Z").timetuple()
-					convTime2 = datetime.datetime.strptime(datetime[1], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					convTime1 = datetime.datetime.strptime(datetimes[0], "%d %B %Y at %H:%M:%S %Z").timetuple()
+					convTime2 = datetime.datetime.strptime(datetimes[1], "%d %B %Y at %H:%M:%S %Z").timetuple()
 					difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
 					record.append(difference)
 				else:
