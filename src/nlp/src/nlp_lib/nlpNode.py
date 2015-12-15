@@ -77,20 +77,19 @@ class NLP:
 				rospy.logwarn(readyAnswer)
 
 				if(readyAnswer == 'error' or not readyAnswer):
-					rospy.logwarn("Here 0")
 					if self.sys_state == 21:
 						response.res_type = 1
 					else:
 						response.res_type = 2
 				elif(readyAnswer[0] == 'ate' and (expected == 'ate' or expected == 'drunk')):
-					rospy.logwarn("Here 3")
 					if expected == 'ate':
 					    foodResp = ''
 					    for index in range(len(readyAnswer[1])):
 					        foodResp += readyAnswer[1][index]
 					        foodResp += ', '
 					        try:
-					            foodResp += readyAnswer[3][len(readyAnswer[3])-index]
+					            timeTemp = str(readyAnswer[3][len(readyAnswer[3])-index-1])[:19]
+					            foodResp += timeTemp.replace('T', ' at ')
 					            foodResp += ', '
 					        except:
 					            pass
@@ -102,18 +101,22 @@ class NLP:
 					        drinkResp += readyAnswer[2][index]
 					        drinkResp += ', '
 					        try:
-					            drinkResp += readyAnswer[3][len(readyAnswer[3])-index]
+					            timeTemp = str(readyAnswer[3][len(readyAnswer[3])-index-1])[:19]
+					            drinkResp += timeTemp.replace('T', ' at ')
 					            drinkResp += ', '
 					        except:
 					            pass
 					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
-					rospy.logwarn("Here 1")
-					response.response = str(readyAnswer[1])
+					if readyAnswer[0] == 'name' and (readyAnswer[1] == 'Janice' or readyAnswer[1] == 'Jonas'):
+						response.response = 'Yannis'
+					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z'):
+						response.response = 'Zee'
+					else:
+						response.response = str(readyAnswer[1])
 					response.res_type = 0
 
-		rospy.logwarn("Here 2")
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
 		
@@ -130,7 +133,6 @@ class NLP:
 
     def getAnswerWIT(self, response):
 		response = urllib.quote(response)
-		pp = pprint.PrettyPrinter(indent=4)
 
 		c = pycurl.Curl()
 
@@ -144,9 +146,6 @@ class NLP:
 
 		try:
 			resultJSON = json.loads(storage.getvalue())
-			#pp.pprint(resultJSON)
-			rospy.logwarn("resultJSON[outcomes]:")
-			rospy.logwarn(resultJSON['outcomes'])
 			if (float(resultJSON['outcomes'][0]['confidence']) > CONFIDENCE_VALUE):
 				return resultJSON['outcomes'][0]
 			else:
