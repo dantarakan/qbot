@@ -28,6 +28,7 @@ private:
 	ros::Subscriber guiSub_;
 	uint8_t qnum;
 	std::string response;
+	std::ofstream outfile;
 	//std::vector<std::string>& qnlist;
 	
 public:
@@ -41,6 +42,8 @@ public:
 		guiSub_ = n.subscribe("/GUI_2_CNC", bufferSize, &Command_Node::guiCallback, this);
 		
 		qnum=0;
+		
+		outfile.open("PatientResponses01.txt");
 		
 		// TODO: insert logic to enter starting parameters like bed ward etc
 		
@@ -180,13 +183,25 @@ public:
 			
 			qnum++;
 			
+			outfile << qnum << ") " << response << std::endl;
+			
 			if(qnum < (int)questions.size()){	
 				qbot::SpcCmd spccmd;			
 				spccmd.question = questions.at(qnum);
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: %s ", questions[qnum].c_str());
 			}
-			else sys_state=30; // finished
+			else{
+			    outfile << "-----===== END =====-----" << std::endl;
+			    outfile.close();
+			    
+			    sys_state=30; // finished
+			    
+			    qbot::SpcCmd spccmd;
+				spccmd.question = "Thank you for your time. QBot out.";
+				spcPub_.publish(spccmd);
+				ROS_INFO("QBot: Thank you for your time. QBot out." );
+			}
 		}
 		else if((nlpres.res_type==1||nlpres.res_type==2) && sys_state==22){
 			response = nlpres.response;
@@ -228,7 +243,7 @@ public:
 int main(int argc, char** argv){
 
 	std::string line;
-	std::ofstream outfile;
+	
     std::ifstream infile("/home/human/catkin_ws/src/qbot/src/questions.txt");
     
     if(infile.is_open())
