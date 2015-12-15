@@ -1,7 +1,7 @@
-How many hours did you sleep last night?
 How are you?
 What is your name?
 How old are you?
+How many hours did you sleep last night?
 What is the last thing you ate, and when?
 What is the last thing you drunk, and when?
 Are you currently pregnant?
