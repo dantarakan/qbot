@@ -88,8 +88,7 @@ public:
 			ros::Duration(10).sleep();*/
 		
 			qbot::SpcCmd spccmd;
-			//spccmd.question = "Hello I am QBot, what is your name?";
-			spccmd.question = questions.at(qnum);
+			spccmd.question = "Hello I am QBot, what is your name?";
 			spcPub_.publish(spccmd);
 			
 			ROS_INFO("Introducing...\n");
@@ -126,25 +125,53 @@ public:
 	void nlpCallback(const qbot::NLPRes& nlpres){
 		
 		
-		if((nlpres.res_type==0||nlpres.res_type==2)  && sys_state==20){
-			response = nlpres.response;
-			ROS_INFO("Reply: %s \n", response.c_str());
+		if(sys_state==20){
+			if(nlpres.res_type==0){
+				response = nlpres.response;
+				ROS_INFO("Reply: %s \n", response.c_str());
 			
-			qbot::SpcCmd spccmd;
+				qbot::SpcCmd spccmd;
+				spccmd.question = "Nice to meet you " + response + ". Are you ready to Start?";
+				spcPub_.publish(spccmd);
+				ROS_INFO("QBot: Nice to meet you [Name]" );
+			}
+			else{
+				qbot::SpcCmd spccmd;
+				spccmd.question = "Nice to meet you. Are you ready to Start?";
+				spcPub_.publish(spccmd);
+				ROS_INFO("QBot: Nice to meet you" );
+			}
 			
-			spccmd.question = "Nice to meet you " + response;
-			spcPub_.publish(spccmd);
-			ROS_INFO("QBot: Nice to meet you" );
-			
-			qnum++;
-			
-			spccmd.question = questions.at(qnum);
-			spcPub_.publish(spccmd);
-			ROS_INFO("QBot: %s ", questions[qnum].c_str());
-			
-			sys_state = 21; // 21: In progress with questioning
+			sys_state = 21; // 21: Checking to start
 		}
-		else if(nlpres.res_type==0 && sys_state==21){
+		else if(sys_state==21){
+			if(nlpres.res_type==0){
+				response = nlpres.response;
+				ROS_INFO("Reply: %s \n", response.c_str());
+				
+				if(!(strncmp(response, "yes", 3))){
+					qbot::SpcCmd spccmd;			
+					spccmd.question = questions.at(qnum);
+					spcPub_.publish(spccmd);
+					ROS_INFO("QBot: %s ", questions[qnum].c_str());
+					sys_state = 22; // 22 In progress
+				}
+				else{
+					qbot::SpcCmd spccmd;
+					spccmd.question = "Are you ready to Start?";
+					spcPub_.publish(spccmd);
+					ROS_INFO("QBot: Are you ready to Start?" );
+				}
+			}
+			else{
+				qbot::SpcCmd spccmd;
+				spccmd.question = "Are you ready to Start?";
+				spcPub_.publish(spccmd);
+				ROS_INFO("QBot: Are you ready to Start?" );
+			}
+		}
+		
+		else if(nlpres.res_type==0 && sys_state==22){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
@@ -156,9 +183,9 @@ public:
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: %s ", questions[qnum].c_str());
 			}
-			else sys_state=22; // finished
+			else sys_state=30; // finished
 		}
-		else if(nlpres.res_type==1 && sys_state==21){
+		else if(nlpres.res_type==1 && sys_state==22){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
 			

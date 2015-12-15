@@ -34,6 +34,7 @@ from std_msgs.msg import String
 
 class _Constants:
     face_det_topic = "facedetection"
+    face_res_topic = "faceresult"
     unique_name = "nao_camera"
     resolution = vision_definitions.kQVGA
     colour_space = vision_definitions.kRGBColorSpace
@@ -49,6 +50,9 @@ class NaoFaceTrack:
     		_Constants.face_det_topic, 
     		Face_detection, 
     		self.detect_face)		
+        
+        self.__facepub = rospy.Publisher(_Constants.face_res_topic, Face_detection , latch=True, queue_size =1000)
+        	
         
     def detect_face(self, msg):
     	Foundface = False
@@ -71,7 +75,7 @@ class NaoFaceTrack:
                 time.sleep(0.5)
                 val = self.__proxyMemory.getData(memValue)
 
-                rospy.logwarn("***************")
+                #rospy.logwarn("***************")
 
                 # Check whether we got a valid output.
                 if(val and isinstance(val, list) and len(val) >= 2):
@@ -98,11 +102,13 @@ class NaoFaceTrack:
                             rospy.loginfo("  alpha %.3f - beta %.3f", faceShapeInfo[1], faceShapeInfo[2])  
                             rospy.loginfo("  alpha %.3f - beta %.3f", faceShapeInfo[3], faceShapeInfo[4])  
                             if(speek == 0):
-                                self.__proxyTTS.say("Hello Human")
+                                #self.__proxyTTS.say("Hello Human")
+                                #self.__facepub.publish(True)
                                 speek = 1
                     except Exception, e:
                         rospy.loginfo("faces detected, but it seems getData is invalid. ALValue ="+ val)
                         rospy.loginfo("Error msg %s", (str(e)))
+                    break
                 else:
                     if(speek == 1):
                         rospy.loginfo("No face detected")

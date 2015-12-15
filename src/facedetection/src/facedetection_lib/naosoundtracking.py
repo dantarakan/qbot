@@ -37,6 +37,7 @@ class _Constants:
     pitch_limits = [-0.6720,  0.5149]
     topic = "move_head"
     face_det_topic = "facedetection"
+    face_res_topic = "faceresult"
 
 class NaoSoundTrack(ALModule):
     '''
@@ -50,6 +51,7 @@ class NaoSoundTrack(ALModule):
         self.__port = port
         self.__pub = rospy.Publisher(_Constants.topic, MoveHead , latch=True, queue_size =1000)
         self.__facepub = rospy.Publisher(_Constants.face_det_topic, Face_detection , latch=True, queue_size =1000)
+        #self.__faceRessub = rospy.Subscriber(_Constants.face_res_topic, Face_detection, self.reset_sensitivity)
     
     def start_sound_track(self):
         #initialise microphone
@@ -62,7 +64,8 @@ class NaoSoundTrack(ALModule):
         #self.__audioProxy.setClientPreferences( self.getName() , 16000, 3, 0 )
         #self.__audioProxy.subscribe(self.getName())
         #configure sound detection
-        self.__sslProxy.setParameter("Sensitivity",0.2)
+        self.__sslProxy.setParameter("Sensitivity",0.3)
+        rospy.logwarn("sensitivity is 0.5")
         self.__TTSproxy = ALProxy("ALTextToSpeech",  self.__ip, self.__port)
         #movement
         self.__motionProxy = ALProxy("ALMotion",  self.__ip, self.__port)
@@ -73,13 +76,18 @@ class NaoSoundTrack(ALModule):
             pass
         self.__sslProxy.subscribe("sound_source_locator")
         self.__memoryProxy.subscribeToEvent("ALSoundLocalization/SoundLocated",self.getName(),"sound_callback")
-        time.sleep(30)
               
-    def stop_sound_track(self):
-        self.__sslProxy.unsubscribe("sound_source_locator")
+    def stop_sound_track(self, msg):
         self.__memoryProxy.unsubscribeToEvent("ALSoundLocalization/SoundLocated",self.getName())
+        self.__sslProxy.unsubscribe("sound_source_locator")
+        rospy.logwarn("stoped")
         #self.__audioProxy.unsubscribe(self.getName())
-
+	
+    def	reset_sensitivity(self,msg):
+		if(msg.enable):
+			self.__sslProxy.setParameter("Sensitivity",0.0)
+			rospy.logwarn("sensitivity is 0")
+			
     def sound_callback(self, event, val):
         """Deal with sound localisation event"""
         rospy.loginfo('sound location' + str(val[1][0])+str(val[1][1]))

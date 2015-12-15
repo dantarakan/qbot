@@ -8,6 +8,9 @@
  <include file="/home/human/catkin_ws/src/speech/launch/speech.launch" />
  
  <include file="/home/human/catkin_ws/src/nlp/launch/nlp.launch" />
+ 
+ <include file="/home/human/catkin_ws/src/facedetection/launch/face.launch" />
+ 
  <!-- 
  <include file="/opt/extra_ws/src/nao_puppet/launch/nao_puppet.launch" />
  -->

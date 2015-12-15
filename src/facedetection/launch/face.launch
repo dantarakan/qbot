@@ -13,5 +13,5 @@
   <!--Launch all NAO puppet nodes -->
   <node pkg="humantrack" type="facetrack_node.py" name="NaoFaceTrack" required="true" />
   <node pkg="humantrack" type="soundtrack_node.py" name="NaoSoundTrack" required="true" />
-  <node pkg="movenao" type="naomotion_node.py" name="MoveNao" required="true"  />
+  <!-- <node pkg="movenao" type="naomotion_node.py" name="MoveNao" required="true"  /> -->
 </launch>

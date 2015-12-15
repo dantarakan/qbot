@@ -46,7 +46,7 @@ if __name__ == "__main__":
     global NaoSound
     NaoSound = NaoSoundTrack("NaoSound", ip, port)
     NaoSound.start_sound_track()
-    NaoSound.stop_sound_track()
+    #NaoSound.stop_sound_track()
     
     rospy.loginfo(" started")
     rospy.spin()

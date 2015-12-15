@@ -80,9 +80,9 @@ class MoveNao:
         current = self.__proxy.getAngles( joint_names, False )
         yaw = current[0] + msg.yaw
         pitch = current[1] + msg.pitch
-        rospy.logwarn("got here 0")
-        rospy.logwarn(yaw)
-        rospy.logwarn(pitch)
+        #rospy.logwarn("got here 0")
+        #rospy.logwarn(yaw)
+        #rospy.logwarn(pitch)
         #Make sure we don't exceed angle limits
         if yaw < _Constants.yaw_limits[0]:
             yaw = _Constants.yaw_limits[0]
@@ -93,7 +93,7 @@ class MoveNao:
             pitch = _Constants.pitch_limits[0]
         elif pitch > _Constants.pitch_limits[1]:
             pitch = _Constants.pitch_limits[1]
-        rospy.logwarn("got here 1")
+        #rospy.logwarn("got here 1")
         self.__proxy.setStiffnesses("Head", 1.0)
         self.__proxy.angleInterpolationWithSpeed(
             joint_names,
@@ -101,4 +101,4 @@ class MoveNao:
             _Constants.head_speed)
         time.sleep(0.5)
         self.__proxy.setStiffnesses("Head", 0.0)
-        rospy.logwarn("got here 2")
+        #rospy.logwarn("got here 2")
