@@ -57,8 +57,6 @@ if __name__ == "__main__":
     broker = ALBroker("NaoMicBroker", "0.0.0.0", 0, ip, port)
     mic = NaoMic("mic", ip, port)  
     njm = NaoSpeech(ip, port, mic, wordlist)
-     
-    
     
     njm.sayString('Hello')
     

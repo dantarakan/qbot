@@ -101,7 +101,7 @@ def runProcess(cmd):
 
 def reg():
     pub = rospy.Publisher('/SPC_2_NLP', SpcNLP, queue_size=1000)
-    rospy.sleep(1)
+    # rospy.sleep(1)
     #s = runProcess('')
     #s = runProcess('sudo python /home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py')
     s = runProcess(['sudo', 'python', '/home/human/catkin_ws/src/speech/src/nao_speech_lib/real_time.py'])
@@ -160,19 +160,31 @@ class NaoSpeech:
         self.__proxy = ALProxy("ALTextToSpeech", ip, port)
         self.__subs = rospy.Subscriber("/CNC_2_SPC", SpcCmd, self.say)
         self.ip = ip
-        self.wordlist = wordlist
-        self.mic = mic
+        #self.wordlist = wordlist
+        #self.mic = mic
+        
+        try:
+            self.ledproxy = ALProxy("ALLeds", ip, port)
+        except Exception,e:
+            print "Could not create proxy to ALLeds"
+            print "Error was: ",e
+            sys.exit(1)
 
 
     def say(self, msg):
     	rospy.loginfo(msg.question+ '0')
+    	
+    	ledname = 'EarLeds'
+    	
+    	self.ledproxy.off(ledname)
         self.__proxy.say( msg.question)
         
         #reg(self.mic,self.ip,  self.wordlist)
+        
+        self.ledproxy.on(ledname)
         reg()
-        #rospy.loginfo(msg.Speech_String+ '1')
-        #self.__proxy.sayToFile("This is another sample text", "/tmp/sample_text.wav")
-        #rospy.loginfo(msg.Speech_String+ '2')
+        
+
     def sayString(self, msg):
     	rospy.loginfo(msg+ ' start')
         self.__proxy.say( msg)
