@@ -4,6 +4,17 @@ Q-Bot is self-navigating humanoid robot to be used for conducting questionnaires
 
 Here lies the ROS project, built by Sze Tan, Hanyi Hu, Daniil Tarakanov, Alxandre Benoit and Guang Yang, as a part of a Human-Centred Robotics course at Imperial College London.
 
+
+## To-Do
+
+ - Make sure it doesn't repeat too many times if it cannot obtain an appropriate response
+ - Use Animated Speech
+ - Make face tracking more robust
+ - Don't make QBot stand up (because of stability issues)
+ - Ears lighting + more obvious que for when QBot is listening (i.e. a Siri chime)
+ - Evaluation
+
+
 #### Useful directories:
 ##### Nao puppet:
  
@@ -100,12 +111,6 @@ Replace "cnc" by your desired node name.
 ['Crouch', 'LyingBack', 'LyingBelly', 'Sit', 'SitOnChair', 'SitRelax', 'Stand', 'StandInit', 'StandZero']
 ```
 
-### Todos
-
- - Sze: publish sys_state to CNC_2_SPC every time it is changed (done)
- - Sze: subscribe to NLP_2_CNC topic	(done)
- - Guang: Code a minimalistic speech-processing node
- - Alex, Hanyi: Code a minimalistic naigation node
 
 License
 ----
