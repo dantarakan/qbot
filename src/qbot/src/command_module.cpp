@@ -71,6 +71,7 @@ public:
 			std_msgs::String msg;
 			msg.data = "Sit";
 			movenaoPub_.publish(msg);
+			
 			ros::Duration(5).sleep();
 			
 		}
@@ -83,12 +84,12 @@ public:
 		// TODO: vvv confirm what triggers the introduction
 		if((guires.cmdcode==200 && sys_state==11) || (guires.cmdcode==250) ){
 			
-			/*
+			
 		    std_msgs::String msg;
 			msg.data = "Stand";
 			movenaoPub_.publish(msg);
 			
-			ros::Duration(10).sleep();*/
+			ros::Duration(10).sleep();
 			
 			sys_state = 20; // 20: able to start question
 		
@@ -167,16 +168,16 @@ public:
 				}
 				else{
 					qbot::SpcCmd spccmd;
-					spccmd.question = "Are you ready to Start?";
+					spccmd.question = "Are you ready to start?";
 					spcPub_.publish(spccmd);
-					ROS_INFO("QBot: Are you ready to Start?" );
+					ROS_INFO("QBot: Are you ready to start?" );
 				}
 			}
 			else{
 				qbot::SpcCmd spccmd;
-				spccmd.question = "Are you ready to Start?";
+				spccmd.question = "Are you ready to start?";
 				spcPub_.publish(spccmd);
-				ROS_INFO("QBot: Are you ready to Start?" );
+				ROS_INFO("QBot: Are you ready to start?" );
 			}
 		}
 		else if(sys_state==22 && nlpres.res_type==0){
@@ -218,6 +219,13 @@ public:
 			ROS_INFO("QBot: %s ", questions[qnum].c_str());
 		}
 		
+		if(sys_state==30){
+			std_msgs::String msg;
+			msg.data = "Sit";
+			movenaoPub_.publish(msg);
+			
+			ros::Duration(5).sleep();
+		}
 		
 		//Other responses
 		if(nlpres.res_type==3){

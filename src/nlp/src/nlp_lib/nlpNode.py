@@ -12,7 +12,7 @@ from std_msgs.msg import String
 CONFIDENCE_VALUE = 0.5
 
 class _Constants:
-    questionDict = {'Hello I am QBot, what is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drunk, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
+    questionDict = {'Are you ready to start?':'yn','Hello I am QBot, what is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drank, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did you pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
     SpcNLP_topic = "SPC_2_NLP"
     NLPCnc_topic = "NLP_2_CNC"
     CncSpc_topic = "CNC_2_SPC"
@@ -47,7 +47,7 @@ class NLP:
 				response.res_type = 1
 			else:
 				response.res_type = 2
-		elif 'break' in msg.response:
+		elif 'rest' in msg.response:
 			response.res_type = 3
 		elif 'nurse' in msg.response:
 			response.res_type = 4
@@ -75,6 +75,7 @@ class NLP:
 		    else:
 				readyAnswer = self.prepareAnswer(answer)
 				rospy.logwarn(readyAnswer)
+				rospy.logwarn(expected)
 
 				if(readyAnswer == 'error' or not readyAnswer):
 					if self.sys_state == 21:
@@ -111,7 +112,7 @@ class NLP:
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
 					if readyAnswer[0] == 'name' and (readyAnswer[1].lower() == 'Janice'.lower() or readyAnswer[1].lower() == 'Jonas'.lower() or readyAnswer[1].lower() == 'Janet'.lower() or readyAnswer[1].lower() == 'Alice'.lower()):
 						response.response = 'Yannis'
-					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z'):
+					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z' or readyAnswer[1] == 'Ze'):
 						response.response = 'Zee'
 					else:
 						response.response = str(readyAnswer[1])
@@ -120,6 +121,9 @@ class NLP:
 					response.response = str(readyAnswer[1])
 					response.res_type = 0
 				elif(readyAnswer[0] == 'duration' and expected == 'sleep'):
+					response.response = str(readyAnswer[1])
+					response.res_type = 0
+				elif readyAnswer[0] == 'age' and expected == 'name':
 					response.response = str(readyAnswer[1])
 					response.res_type = 0
 				else:
@@ -164,95 +168,98 @@ class NLP:
     def prepareAnswer(self, answer):
 		rospy.logwarn("Answer:")
 		rospy.logwarn(answer)
-		intent = answer['intent']
-		entities = answer['entities']
-		record = []
-		#rospy.logwarn(entities)
-		if(intent == 'am'):
-			if 'age_of_person' in entities:
-				record.append('age')
-				record.append(entities['age_of_person'][0]['value'])
-			elif 'name' in entities:
-				record.append('name')
-				record.append(entities['name'][0]['value'])
-		elif(intent == 'ate'):
-			record.append('ate')
-			record.append([])
-			record.append([])
-			record.append([])
-			if 'food' in entities:
-				for item in entities['food']:
-					record[1].append(item['value'])
-			if 'drink' in entities:
-				for item in entities['drink']:
-					record[2].append(item['value'])
-			if 'datetime' in entities:
-				for item in entities['datetime']:
-					#time1 = datetime.datetime.strptime(item['value'], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
-					#2015-12-16T18:00:00.000-08:00
-					record[3].append(item['value'])
-		elif(intent == 'yes'):
-			record.append('yes')
-			record.append('yes')
-		elif(intent == 'deny'):
-			record.append('no')
-			record.append('no')
-		elif(intent == 'never'):
-			record.append('frequency')
-			record.append('never')
-		elif(intent == 'sometimes'):
-			record.append('frequency')
-			record.append('sometimes')
-		elif(intent == 'always'):
-			record.append('frequency')
-			record.append('always')
-		elif(intent == 'bad'):
-			record.append('quality')
-			record.append('bad')
-		elif(intent == 'average'):
-			record.append('quality')
-			record.append('average')
-		elif(intent == 'excellent'):
-			record.append('quality')
-			record.append('excellent')
-		elif(intent == 'sleep'):
-			record.append('sleep')
-			datetimes = []
-			if 'duration' in entities:
-				record.append(entities['duration'][0]['value'])
-			elif 'datetime' in entities:
-				for item in entities['datetime']:
-					datetimes.append(item['value'])
-				rospy.logwarn(datetimes)
-				timeList = list(set(datetimes))
-				rospy.logwarn(timeList)
-				filteredTimeList = []
-				for i in range(len(timeList)-1):
-					if self.countDiffs(timeList[i], timeList[i+1]) > 1 or self.diffG1(int(timeList[i][8:9]), int(timeList[i+1][8:9])):
-						filteredTimeList.append(timeList[i])
-					if i == len(timeList)-2:
-						filteredTimeList.append(timeList[i+1])
-				rospy.logwarn(filteredTimeList)
-				if len(filteredTimeList) == 2:
-					# Calc the difference
-					convTime1 = datetime.datetime.strptime(filteredTimeList[0], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
-					convTime2 = datetime.datetime.strptime(filteredTimeList[1], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
-					difference = abs((time.mktime(convTime1) - time.mktime(convTime2))) / 3600
-					if difference > 12:
-						difference = 24 - difference
-					record.append(difference)
-				else:
-					return 'error'
-		elif(intent == 'number'):
-			record.append('number')
-			if 'number' in entities:
-				record.append(entities['number'][0]['value'])
-		elif(intent == 'duration'):
-			record.append('duration')
-			if 'duration' in entities:
-				record.append(entities['duration'][0]['value'])
+		try:
+			intent = answer['intent']
+			entities = answer['entities']
+			record = []
+			#rospy.logwarn(entities)
+			if(intent == 'am'):
+				if 'age_of_person' in entities:
+					record.append('age')
+					record.append(entities['age_of_person'][0]['value'])
+				elif 'name' in entities:
+					record.append('name')
+					record.append(entities['name'][0]['value'])
+			elif(intent == 'ate'):
+				record.append('ate')
+				record.append([])
+				record.append([])
+				record.append([])
+				if 'food' in entities:
+					for item in entities['food']:
+						record[1].append(item['value'])
+				if 'drink' in entities:
+					for item in entities['drink']:
+						record[2].append(item['value'])
+				if 'datetime' in entities:
+					for item in entities['datetime']:
+						#time1 = datetime.datetime.strptime(item['value'], "%Y-%m-%dT%H:%M:%S.000-08:00").timetuple()
+						#2015-12-16T18:00:00.000-08:00
+						record[3].append(item['value'])
+			elif(intent == 'yes'):
+				record.append('yes')
+				record.append('yes')
+			elif(intent == 'deny'):
+				record.append('no')
+				record.append('no')
+			elif(intent == 'never'):
+				record.append('frequency')
+				record.append('never')
+			elif(intent == 'sometimes'):
+				record.append('frequency')
+				record.append('sometimes')
+			elif(intent == 'always'):
+				record.append('frequency')
+				record.append('always')
+			elif(intent == 'bad'):
+				record.append('quality')
+				record.append('bad')
+			elif(intent == 'average'):
+				record.append('quality')
+				record.append('average')
+			elif(intent == 'excellent'):
+				record.append('quality')
+				record.append('excellent')
+			elif(intent == 'sleep'):
+				record.append('sleep')
+				datetimes = []
+				if 'duration' in entities:
+					record.append(entities['duration'][0]['value'])
+				elif 'datetime' in entities:
+					for item in entities['datetime']:
+						datetimes.append(item['value'])
+					rospy.logwarn(datetimes)
+					timeList = list(set(datetimes))
+					rospy.logwarn(timeList)
+					filteredTimeList = []
+					for i in range(len(timeList)-1):
+						if self.countDiffs(timeList[i], timeList[i+1]) > 1 or self.diffG1(int(timeList[i][8:9]), int(timeList[i+1][8:9])):
+							filteredTimeList.append(timeList[i])
+						if i == len(timeList)-2:
+							filteredTimeList.append(timeList[i+1])
+					rospy.logwarn(filteredTimeList)
+					if len(filteredTimeList) == 2:
+						# Calc the difference
+						convTime1 = datetime.datetime.strptime(filteredTimeList[0], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
+						convTime2 = datetime.datetime.strptime(filteredTimeList[1], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
+						difference = abs((time.mktime(convTime1) - time.mktime(convTime2))) / 3600
+						if difference > 12:
+							difference = 24 - difference
+						record.append(difference)
+					else:
+						return 'error'
+			elif(intent == 'number'):
+				record.append('number')
+				if 'number' in entities:
+					record.append(entities['number'][0]['value'])
+			elif(intent == 'duration'):
+				record.append('duration')
+				if 'duration' in entities:
+					record.append(entities['duration'][0]['value'])
 
-		return record
+			return record
+		except:
+			return ['', 1]
 		
     def diffG1(self, a, b):
         diff = abs(a-b)

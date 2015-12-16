@@ -7,6 +7,7 @@ import speech_recognition as sr
 
 def real_time_recog():
 	r = sr.Recognizer()
+	r.dynamic_energy_threshold = False
 	with sr.Microphone() as source:
 		audio = r.listen(source) # read the entire WAV file
 
