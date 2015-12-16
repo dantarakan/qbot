@@ -109,13 +109,21 @@ class NLP:
 					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
-					if readyAnswer[0] == 'name' and (readyAnswer[1] == 'Janice' or readyAnswer[1] == 'Jonas' or readyAnswer[1] == 'Janet' or readyAnswer[1] == 'Alice'):
+					if readyAnswer[0] == 'name' and (readyAnswer[1].lower() == 'Janice'.lower() or readyAnswer[1].lower() == 'Jonas'.lower() or readyAnswer[1].lower() == 'Janet'.lower() or readyAnswer[1].lower() == 'Alice'.lower()):
 						response.response = 'Yannis'
 					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z'):
 						response.response = 'Zee'
 					else:
 						response.response = str(readyAnswer[1])
 					response.res_type = 0
+				elif(readyAnswer[0] == 'number' and (expected == 'age' or expected == 'sleep')):
+					response.response = str(readyAnswer[1])
+					response.res_type = 0
+				elif(readyAnswer[0] == 'duration' and expected == 'sleep'):
+					response.response = str(readyAnswer[1])
+					response.res_type = 0
+				else:
+					response.res_type = 1
 
 		rospy.logwarn("NLP sending response: %s  type: %d\n", response.response, response.res_type)
 		self.__pub.publish(response)
@@ -189,6 +197,24 @@ class NLP:
 		elif(intent == 'deny'):
 			record.append('no')
 			record.append('no')
+		elif(intent == 'never'):
+			record.append('frequency')
+			record.append('never')
+		elif(intent == 'sometimes'):
+			record.append('frequency')
+			record.append('sometimes')
+		elif(intent == 'always'):
+			record.append('frequency')
+			record.append('always')
+		elif(intent == 'bad'):
+			record.append('quality')
+			record.append('bad')
+		elif(intent == 'average'):
+			record.append('quality')
+			record.append('average')
+		elif(intent == 'excellent'):
+			record.append('quality')
+			record.append('excellent')
 		elif(intent == 'sleep'):
 			record.append('sleep')
 			datetimes = []
@@ -197,13 +223,48 @@ class NLP:
 			elif 'datetime' in entities:
 				for item in entities['datetime']:
 					datetimes.append(item['value'])
-				if datetimes.count == 2:
+				rospy.logwarn(datetimes)
+				timeList = list(set(datetimes))
+				rospy.logwarn(timeList)
+				filteredTimeList = []
+				for i in range(len(timeList)-1):
+					if self.countDiffs(timeList[i], timeList[i+1]) > 1 or self.diffG1(int(timeList[i][8:9]), int(timeList[i+1][8:9])):
+						filteredTimeList.append(timeList[i])
+					if i == len(timeList)-2:
+						filteredTimeList.append(timeList[i+1])
+				rospy.logwarn(filteredTimeList)
+				if len(filteredTimeList) == 2:
 					# Calc the difference
-					convTime1 = datetime.datetime.strptime(datetimes[0], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
-					convTime2 = datetime.datetime.strptime(datetimes[1], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
-					difference = abs((time.mktime(convTime1) - time.mktime(convTime2)) / 216000)
+					convTime1 = datetime.datetime.strptime(filteredTimeList[0], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
+					convTime2 = datetime.datetime.strptime(filteredTimeList[1], "%Y-%m-%dT%H:%M:%S.000Z").timetuple()
+					difference = abs((time.mktime(convTime1) - time.mktime(convTime2))) / 3600
+					if difference > 12:
+						difference = 24 - difference
 					record.append(difference)
 				else:
 					return 'error'
+		elif(intent == 'number'):
+			record.append('number')
+			if 'number' in entities:
+				record.append(entities['number'][0]['value'])
+		elif(intent == 'duration'):
+			record.append('duration')
+			if 'duration' in entities:
+				record.append(entities['duration'][0]['value'])
 
 		return record
+		
+    def diffG1(self, a, b):
+        diff = abs(a-b)
+        if diff == 1 or diff == 29 or diff == 30:
+            return False
+        else:
+            return True
+            
+    def countDiffs(self, a, b):
+        u=zip(a,b)
+        counter = 0
+        for i,j in u:
+            if i!=j:
+                counter += 1
+        return counter
