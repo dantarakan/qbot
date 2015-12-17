@@ -27,6 +27,7 @@
 import rospy
 from naoqi import ALModule, ALProxy # microphone and speaker
 from humantrack.msg import MoveHead,Face_detection
+from std_msgs.msg import String
 import alsaaudio # signal processing, a python module
 import time
 class _Constants:
@@ -35,9 +36,10 @@ class _Constants:
     pitch = 0.3
     yaw_limits = [-2.0857,  2.0857]
     pitch_limits = [-0.6720,  0.5149]
-    topic = "move_head"
+    #topic = "move_head"
     face_det_topic = "facedetection"
     face_res_topic = "faceresult"
+    face_track_topic = "/CNC_2_FACETRACK"
 
 class NaoSoundTrack(ALModule):
     '''
@@ -49,11 +51,26 @@ class NaoSoundTrack(ALModule):
         
         self.__ip = ip
         self.__port = port
-        self.__pub = rospy.Publisher(_Constants.topic, MoveHead , latch=True, queue_size =1000)
+        
+        #self.__pub = rospy.Publisher(_Constants.topic, MoveHead , latch=True, queue_size =1000)
+        
         self.__facepub = rospy.Publisher(_Constants.face_det_topic, Face_detection , latch=True, queue_size =1000)
-        #self.__faceRessub = rospy.Subscriber(_Constants.face_res_topic, Face_detection, self.reset_sensitivity)
+        
+        self.__CNCsub = rospy.Subscriber(_Constants.face_track_topic, String, self.start_sound_track)
+        
+        self.__faceRessub = rospy.Subscriber(_Constants.face_res_topic, Face_detection, self.stop_sound_track)
+       
     
-    def start_sound_track(self):
+    def start_sound_track(self, msg):
+        self.__proxyTTS = ALProxy("ALAnimatedSpeech", self.__ip, self.__port)
+        
+        # set the local configuration
+        sayconfig = {"bodyLanguageMode":"contextual"}
+        
+        self.__proxyTTS.say("Can you help me find you by clapping your hand?", sayconfig)
+        
+        self.__proxyMotion = ALProxy("ALMotion", self.__ip, self.__port)
+        
         #initialise microphone
         #self.__audioProxy = ALProxy("ALAudioDevice", self.__ip, self.__port)
         #initialise soundsourcelocalisation
@@ -63,35 +80,70 @@ class NaoSoundTrack(ALModule):
         #debugging purpose
         #self.__audioProxy.setClientPreferences( self.getName() , 16000, 3, 0 )
         #self.__audioProxy.subscribe(self.getName())
+        
         #configure sound detection
-        self.__sslProxy.setParameter("Sensitivity",0.3)
-        rospy.logwarn("sensitivity is 0.5")
-        self.__TTSproxy = ALProxy("ALTextToSpeech",  self.__ip, self.__port)
-        #movement
-        self.__motionProxy = ALProxy("ALMotion",  self.__ip, self.__port)
-        #callback from memory         
+        self.__sslProxy.setParameter("Sensitivity",0.1)
+
+        #callback from memory      
         try:
             self.__memoryProxy.unsubscribeToEvent("ALSoundLocalization/SoundLocated","soundtracking")
         except:
             pass
+        
         self.__sslProxy.subscribe("sound_source_locator")
-        self.__memoryProxy.subscribeToEvent("ALSoundLocalization/SoundLocated",self.getName(),"sound_callback")
+        self.__memoryProxy.subscribeToMicroEvent(
+            "ALSoundLocalization/SoundLocated",
+            self.getName(), 
+            "AnotherUserDataToIdentifyEvent", 
+            "sound_callback")
+
               
     def stop_sound_track(self, msg):
-        self.__memoryProxy.unsubscribeToEvent("ALSoundLocalization/SoundLocated",self.getName())
+        self.__memoryProxy.unsubscribeToMicroEvent("ALSoundLocalization/SoundLocated",self.getName())
         self.__sslProxy.unsubscribe("sound_source_locator")
-        rospy.logwarn("stoped")
+        rospy.logwarn("stopped")
         #self.__audioProxy.unsubscribe(self.getName())
 	
     def	reset_sensitivity(self,msg):
 		if(msg.enable):
-			self.__sslProxy.setParameter("Sensitivity",0.0)
-			rospy.logwarn("sensitivity is 0")
+			self.__sslProxy.setParameter("Sensitivity", msg.sensitivity)
+			rospy.logwarn(msg.sensitivity)
 			
-    def sound_callback(self, event, val):
+    def sound_callback(self, event, val, msg):
         """Deal with sound localisation event"""
         rospy.loginfo('sound location' + str(val[1][0])+str(val[1][1]))
         rospy.loginfo('confidence' + str(val[1][2]))    
         #self.__TTSproxy.say("sound detected")
-        self.__pub.publish(val[1][0],val[1][1])
-        self.__facepub.publish(True)
+        #self.__pub.publish(val[1][0],val[1][1])
+        
+        rospy.logwarn("Moving Head to Sound")
+        
+        joint_names = ["HeadYaw", "HeadPitch"]
+        current = self.__proxyMotion.getAngles( joint_names, False )
+        yaw = current[0] + val[1][0]
+        pitch = current[1] + val[1][1]
+
+        #Make sure we don't exceed angle limits
+        if yaw < _Constants.yaw_limits[0]:
+            yaw = _Constants.yaw_limits[0]
+        elif yaw > _Constants.yaw_limits[1]:
+            yaw = _Constants.yaw_limits[1]
+
+        if pitch < _Constants.pitch_limits[0]:
+            pitch = _Constants.pitch_limits[0]
+        elif pitch > _Constants.pitch_limits[1]:
+            pitch = _Constants.pitch_limits[1]
+
+        self.__proxyMotion.setStiffnesses("Head", 1.0)
+        self.__proxyMotion.angleInterpolationWithSpeed(
+            joint_names,
+            [ yaw, pitch ],
+            _Constants.head_speed)
+        time.sleep(2.0)
+        #self.__proxyMotion.setStiffnesses("Head", 0.0)
+        
+        # Start face tracking
+        self.__facepub.publish(True , 0.1)
+        
+        
+

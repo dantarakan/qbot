@@ -42,36 +42,81 @@ class _Constants:
 
 class NaoFaceTrack:
     def __init__(self, ip, port):
-        self.__proxyTTS = ALProxy("ALTextToSpeech", ip, port) #test only, will need to use publisher later
-        self.__proxyVideo = ALProxy("ALVideoDevice", ip, port)
-        self.__proxyFace = ALProxy("ALFaceDetection", ip, port)
-        self.__proxyMemory = ALProxy("ALMemory", ip, port)		              
+        #self.__proxyTTS = ALProxy("ALTextToSpeech", ip, port) #test only, will need to use publisher later
+        #self.__proxyVideo = ALProxy("ALVideoDevice", ip, port)
+        #self.__proxyFace = ALProxy("ALFaceDetection", ip, port)
+        #self.__proxyMemory = ALProxy("ALMemory", ip, port)		              
+    	
+    	
+    	self.__proxyTracker = ALProxy("ALTracker", ip, port)
+        self.__proxyMotion = ALProxy("ALMotion", ip, port)
+        
     	self.__face_sub = rospy.Subscriber( 
     		_Constants.face_det_topic, 
     		Face_detection, 
-    		self.detect_face)		
+    		self.face_tracker)		
         
-        self.__facepub = rospy.Publisher(_Constants.face_res_topic, Face_detection , latch=True, queue_size =1000)
-        	
+        self.__facepub = rospy.Publisher(
+            _Constants.face_res_topic, 
+            Face_detection , 
+            latch=True, 
+            queue_size =1000)
         
+        #name_id = self.__proxyVideo.subscribe(
+        #        _Constants.unique_name,
+        #        _Constants.resolution,
+        #        _Constants.colour_space,
+        #        _Constants.fps )
+        
+        #Period = 500
+        #self.__proxyFace.subscribe("TEST", Period, 0.0)	
+           
+
+    def face_tracker(self, msg):
+        # Stop sound localization
+        self.__facepub.publish(True, 0.0)
+        
+        # First, wake up
+        self.__proxyMotion.setStiffnesses("Head", 1.0)
+        
+		# Add target to track.
+        targetName = "Face"
+        faceWidth = 0.1
+        self.__proxyTracker.registerTarget(targetName, faceWidth)
+        
+		# Then, start tracker.
+        self.__proxyTracker.track(targetName)
+        
+        rospy.logwarn("ALTracker successfully started, now show your face to robot!")
+        rospy.logwarn("Use Ctrl+c to stop this script.")
+        
+        rate = rospy.Rate(10) # 10hz
+        
+        while not rospy.is_shutdown():
+            rate.sleep()
+
+        # Stop tracker.
+        rospy.logwarn("Stopping...")
+        self.__proxyTracker.stopTracker()
+        self.__proxyTracker.unregisterAllTargets()
+        self.__proxyMotion.setStiffnesses("Head", 0.0)
+        rospy.logwarn("Stopped")
+        
+"""
     def detect_face(self, msg):
     	Foundface = False
     	if(msg.enable):
             #registering VIM
             #not sure this part is needed or handled by ALFaceDetection
-            name_id = self.__proxyVideo.subscribe(
-                _Constants.unique_name,
-                _Constants.resolution,
-                _Constants.colour_space,
-                _Constants.fps )
+            
             #subscribe to ALFaceDetection proxy GVM
-            Period = 500
-            self.__proxyFace.subscribe("TEST", Period, 0.0)
+            
+            
             #getting video buffer
             #getting detected result from ALMemory
             memValue = "FaceDetected"
             speek = 0
-            for i in range(0, 20):
+            for i in range(0, 40):
                 time.sleep(0.5)
                 val = self.__proxyMemory.getData(memValue)
 
@@ -88,7 +133,7 @@ class NaoFaceTrack:
 
                     # Second Field = array of face_Info's.
                     faceInfoArray = val[1]
-
+                    self.__proxyFace.setTrackingEnabled(True)
                     try:
                         # Browse the faceInfoArray to get info on each detected face.
                         for j in range( len(faceInfoArray)-1 ):
@@ -103,7 +148,10 @@ class NaoFaceTrack:
                             rospy.loginfo("  alpha %.3f - beta %.3f", faceShapeInfo[3], faceShapeInfo[4])  
                             if(speek == 0):
                                 #self.__proxyTTS.say("Hello Human")
-                                #self.__facepub.publish(True)
+                                
+                                Foundface = self.__proxyFace.isTrackingEnabled()
+                                rospy.logwarn(Foundface)
+                                self.__facepub.publish(True, msg.sensitivity)
                                 speek = 1
                     except Exception, e:
                         rospy.loginfo("faces detected, but it seems getData is invalid. ALValue ="+ val)
@@ -114,7 +162,12 @@ class NaoFaceTrack:
                         rospy.loginfo("No face detected")
                         #self.__proxyTTS.say("No face detected")
                         speek = 0
-            self.__proxyFace.unsubscribe("TEST")	
-            self.__proxyVideo.unsubscribe( name_id )
+            if(Foundface == False):            
+            	#self.__proxyTTS.say("Can you help me find you by clapping your hand?")
+            	self.__facepub.publish(True, 0.5)
+            	self.__proxyFace.setTrackingEnabled(False)
+            #self.__proxyFace.unsubscribe("TEST")	
+            #self.__proxyVideo.unsubscribe( name_id )
         else:
             rospy.loginfo("face detection disabled")
+"""

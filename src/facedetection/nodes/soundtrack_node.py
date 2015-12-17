@@ -30,7 +30,9 @@ import rospy,time
 from naoqi import ALBroker
 from naoqi import ALModule, ALProxy
 from facedetection_lib import NaoSoundTrack
-IP = "172.20.10.8"
+#IP = "192.168.1.125"
+#IP = "172.20.10.8"
+IP = "192.168.43.70"
      
 if __name__ == "__main__":
     rospy.init_node('NaoSoundTrack', sys.argv)
@@ -45,7 +47,7 @@ if __name__ == "__main__":
     
     global NaoSound
     NaoSound = NaoSoundTrack("NaoSound", ip, port)
-    NaoSound.start_sound_track()
+    #NaoSound.start_sound_track()
     #NaoSound.stop_sound_track()
     
     rospy.loginfo(" started")

@@ -30,7 +30,9 @@ import rospy,time
 from naoqi import ALBroker
 from naoqi import ALModule, ALProxy
 from facedetection_lib import NaoFaceTrack
-IP = "172.20.10.8"
+#IP = "192.168.1.125"
+#IP = "172.20.10.8"
+IP = "192.168.43.70"
      
 if __name__ == "__main__":
     rospy.init_node('NaoFaceTrack', sys.argv)

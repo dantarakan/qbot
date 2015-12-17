@@ -9,10 +9,10 @@ from nlp.msg import NLPRes
 from nlp.msg import CncStatus
 from std_msgs.msg import String
 
-CONFIDENCE_VALUE = 0.5
+CONFIDENCE_VALUE = 0.1
 
 class _Constants:
-    questionDict = {'Are you ready to start?':'yn','Hello I am QBot, what is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drank, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did you pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
+    questionDict = {'Do you feel more relaxed talking to me than to a human?':'yn', 'Would you have preferred to talk to a human instead?':'yn', 'Are you ready to start?':'yn','Hello I am QBot, what is your name?': 'name', 'How old are you?': 'age', 'How many hours did you sleep last night?': 'sleep', 'What is the last thing you ate, and when?': 'ate', 'What is the last thing you drank, and when?': 'drunk', 'Are you currently pregnant?': 'yn', 'Do you have a sickle cell disease?': 'yn', 'Are you wearing any metal jewelry?': 'yn', 'Do you have any loose teeth, caps or crowns?': 'yn', 'Are you wearing glasses or contact lenses?': 'yn', 'Did you pee recently?': 'yn', 'Do you have any prosthesis?': 'yn', 'Did you ever have any exposure to the mad cow disease?': 'yn', 'How often do find it hard to wind down?': 'frequency', 'How often aware of dryness in your mouth?': 'frequency', 'How often do you find that you cannot seem to experience any positive feeling at all?': 'frequency', 'How do you rate the level of service?': 'quality'}
     SpcNLP_topic = "SPC_2_NLP"
     NLPCnc_topic = "NLP_2_CNC"
     CncSpc_topic = "CNC_2_SPC"
@@ -41,6 +41,7 @@ class NLP:
             
     def getMessage(self, msg):
 		response = NLPRes()
+		response.response = msg.response;
 		rospy.logwarn("NLP received response from SPC: %s\n", msg.response)
 		if not msg.response:
 			if self.sys_state == 21:
@@ -59,13 +60,16 @@ class NLP:
 				try:
 					expected = _Constants.questionDict[self.question[27:]]
 				except:
-					if "ready to start" in self.question:
-						expected = 'yn'
-					elif self.sys_state == 21:
-						response.res_type = 1
-					else:
-						response.res_type = 2
-		    rospy.logwarn(expected)
+				    try:
+					    expected = _Constants.questionDict[self.question[40:]]
+				    except:
+					    if "ready to start" in self.question:
+						    expected = 'yn'
+					    elif self.sys_state == 21:
+						    response.res_type = 1
+					    else:
+						    response.res_type = 2
+			
 		    answer = self.getAnswerWIT(msg.response)
 		    if not answer:
 				if self.sys_state == 21:
@@ -75,7 +79,7 @@ class NLP:
 		    else:
 				readyAnswer = self.prepareAnswer(answer)
 				rospy.logwarn(readyAnswer)
-				rospy.logwarn(expected)
+				rospy.logwarn("Expected: "+expected)
 
 				if(readyAnswer == 'error' or not readyAnswer):
 					if self.sys_state == 21:
@@ -109,6 +113,8 @@ class NLP:
 					            pass
 					    response.response = drinkResp[:(len(drinkResp)-2)]
 					    response.res_type = 0
+				elif readyAnswer[0] == 'repeat':
+				    response.res_type = 5
 				elif(readyAnswer[0] == expected or ((readyAnswer[0] == 'yes' or readyAnswer[0] == 'no') and expected == 'yn')):
 					if readyAnswer[0] == 'name' and (readyAnswer[1].lower() == 'Janice'.lower() or readyAnswer[1].lower() == 'Jonas'.lower() or readyAnswer[1].lower() == 'Janet'.lower() or readyAnswer[1].lower() == 'Alice'.lower()):
 						response.response = 'Yannis'
@@ -124,7 +130,12 @@ class NLP:
 					response.response = str(readyAnswer[1])
 					response.res_type = 0
 				elif readyAnswer[0] == 'age' and expected == 'name':
-					response.response = str(readyAnswer[1])
+					if readyAnswer[1].lower() == 'Janice'.lower() or readyAnswer[1].lower() == 'Jonas'.lower() or readyAnswer[1].lower() == 'Janet'.lower() or readyAnswer[1].lower() == 'Alice'.lower():
+						response.response = 'Yannis'
+					elif readyAnswer[0] == 'name' and (readyAnswer[1] == 'z' or readyAnswer[1] == 'Ze'):
+						response.response = 'Zee'
+					else:
+						response.response = str(readyAnswer[1])
 					response.res_type = 0
 				else:
 					response.res_type = 1
@@ -220,6 +231,8 @@ class NLP:
 			elif(intent == 'excellent'):
 				record.append('quality')
 				record.append('excellent')
+			elif(intent == 'repeat'):
+				record.append('repeat')
 			elif(intent == 'sleep'):
 				record.append('sleep')
 				datetimes = []

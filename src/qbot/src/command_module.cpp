@@ -11,7 +11,10 @@
 #include <iostream>  //declaring variables
 #include <string>
 #include <fstream>
+#include <sstream> 
 #include <vector>
+#include <time.h>
+#include <stdlib.h>
 
 const int bufferSize = 1000;
 uint8_t sys_state = 0;
@@ -22,13 +25,17 @@ private:
 	ros::Publisher navPub_;
 	ros::Publisher spcPub_;
 	ros::Publisher movenaoPub_;
+	ros::Publisher facetrackPub_;
 	ros::Subscriber navSub_;
-	//ros::Subscriber spcSub_;
 	ros::Subscriber nlpSub_;
 	ros::Subscriber guiSub_;
-	uint8_t qnum;
-	std::string response;
+	uint8_t qnum, trynum;
+	std::string response, filename;
 	std::ofstream outfile;
+	ros::Time tCycles;
+	double t1;
+	std::stringstream convert;
+
 	//std::vector<std::string>& qnlist;
 	
 public:
@@ -36,16 +43,13 @@ public:
 		navPub_ = n.advertise<qbot::NavCmd>("/CNC_2_NAV", bufferSize);
 		spcPub_ = n.advertise<qbot::SpcCmd>("/CNC_2_SPC", bufferSize);
 		movenaoPub_ = n.advertise<std_msgs::String>("/posture", bufferSize);
+		facetrackPub_ = n.advertise<std_msgs::String>("/CNC_2_FACETRACK", bufferSize);
 		navSub_ = n.subscribe("/NAV_2_CNC", bufferSize, &Command_Node::navCallback, this);
 		//spcSub_ = n.subscribe("/SPC_2_CNC", bufferSize, &Command_Node::spcCallback, this);
 		nlpSub_ = n.subscribe("/NLP_2_CNC", bufferSize, &Command_Node::nlpCallback, this);
 		guiSub_ = n.subscribe("/GUI_2_CNC", bufferSize, &Command_Node::guiCallback, this);
 		
 		qnum=0;
-		
-		outfile.open("/home/human/catkin_ws/src/qbot/src/PatientResponses01.txt");
-		
-		// TODO: insert logic to enter starting parameters like bed ward etc
 		
 	}
 	
@@ -67,6 +71,11 @@ public:
 			ROS_INFO("QBot RESET");
 			sys_state = 0;
 			qnum = 0;
+
+			srand(time(NULL));
+		    convert << rand();
+		    filename = "/home/human/catkin_ws/src/qbot/results/" + convert.str() + ".txt";
+		    outfile.open(filename.c_str());
 			
 			std_msgs::String msg;
 			msg.data = "Sit";
@@ -86,16 +95,24 @@ public:
 			
 			
 		    std_msgs::String msg;
-			msg.data = "Stand";
-			movenaoPub_.publish(msg);
+			msg.data = "Start Face Tracking";
+			facetrackPub_.publish(msg);
 			
 			ros::Duration(10).sleep();
 			
 			sys_state = 20; // 20: able to start question
-		
+			
 			qbot::SpcCmd spccmd;
-			spccmd.question = "Hello I am QBot, what is your name?";
+			spccmd.question = "Okay I can see you now. When my ears are lit up, it means that I am listening";
+			spccmd.spc_state = 100;
 			spcPub_.publish(spccmd);
+			
+			ros::Duration(1).sleep();
+		
+			qbot::SpcCmd spccmd2;
+			spccmd2.question = "Hello I am QBot, what is your name?";
+			spccmd2.spc_state = 0;
+			spcPub_.publish(spccmd2);
 			
 			ROS_INFO("Introducing...\n");
 
@@ -159,6 +176,8 @@ public:
 				if(response.compare("yes") == 0){
 				    sys_state = 22; // 22 In progress with questioning
 				    
+				    tCycles = ros::Time::now();
+	    
 					qbot::SpcCmd spccmd;			
 					spccmd.question = questions.at(qnum);
 					spcPub_.publish(spccmd);
@@ -180,15 +199,23 @@ public:
 				ROS_INFO("QBot: Are you ready to start?" );
 			}
 		}
-		else if(sys_state==22 && nlpres.res_type==0){
+		else if(sys_state==22 && (nlpres.res_type==0 || trynum>=1 )){
 			response = nlpres.response;
 			ROS_INFO("Reply: %s \n", response.c_str());
+
+			t1 = (ros::Time::now().toSec() - tCycles.toSec());
+			// Record t1
+			ROS_INFO("Time: %f \n", t1);
 			
 			qnum++;
+			trynum = 0;
 			
 			outfile << "Reply: " << response << std::endl;
+			outfile << "Time: " << t1 << std::endl;
 			
-			if(qnum < ((int)questions.size()-1)){	
+			if(qnum < ((int)questions.size()-1)){
+			
+			    tCycles = ros::Time::now();	
 				qbot::SpcCmd spccmd;			
 				spccmd.question = questions.at(qnum);
 				spcPub_.publish(spccmd);
@@ -204,6 +231,7 @@ public:
 			    
 			    qbot::SpcCmd spccmd;
 				spccmd.question = "Thank you for your time. QBot out.";
+				spccmd.spc_state = 100;
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: Thank you for your time. QBot out." );
 			}
@@ -213,18 +241,30 @@ public:
 			ROS_INFO("Reply: %s \n", response.c_str());
 			
 			// Got gibberish; ask same question again
+			
+			trynum++;
+			
 			qbot::SpcCmd spccmd;			
 			spccmd.question = "Sorry I didn't catch that, " + questions.at(qnum);
 			spcPub_.publish(spccmd);
 			ROS_INFO("QBot: %s ", questions[qnum].c_str());
 		}
-		
-		if(sys_state==30){
+		else if((nlpres.res_type==5) && sys_state==22){
+			ROS_INFO("Subject didn't understand the question.\n");
+			
+			// Subject didn't understand the question; ask same question again
+			qbot::SpcCmd spccmd;			
+			spccmd.question = "No worries, I will repeat the question, " + questions.at(qnum);
+			spcPub_.publish(spccmd);
+			ROS_INFO("QBot: %s ", questions[qnum].c_str());
+		}
+		else if(sys_state==30){
+			/*
 			std_msgs::String msg;
 			msg.data = "Sit";
 			movenaoPub_.publish(msg);
 			
-			ros::Duration(5).sleep();
+			ros::Duration(5).sleep();*/
 		}
 		
 		//Other responses

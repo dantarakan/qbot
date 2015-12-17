@@ -157,11 +157,12 @@ class NaoMic(ALModule):
 class NaoSpeech:
     def __init__(self, ip, port, mic, wordlist):
         rospy.loginfo('test: hello')
-        self.__proxy = ALProxy("ALTextToSpeech", ip, port)
+        self.__proxy = ALProxy("ALAnimatedSpeech", ip, port)
         self.__subs = rospy.Subscriber("/CNC_2_SPC", SpcCmd, self.say)
         self.ip = ip
         #self.wordlist = wordlist
         #self.mic = mic
+        
         
         try:
             self.ledproxy = ALProxy("ALLeds", ip, port)
@@ -172,17 +173,20 @@ class NaoSpeech:
 
 
     def say(self, msg):
-    	rospy.loginfo(msg.question+ '0')
+        rospy.loginfo(msg.question+ '0')
+    	# set the local configuration
+        sayconfig = {"bodyLanguageMode":"contextual"}
+        ledname = 'EarLeds'
     	
-    	ledname = 'EarLeds'
+        self.ledproxy.off(ledname)
     	
-    	self.ledproxy.off(ledname)
-        self.__proxy.say( msg.question)
+        self.__proxy.say( msg.question, sayconfig)
         
         #reg(self.mic,self.ip,  self.wordlist)
         
         self.ledproxy.on(ledname)
-        reg()
+        if msg.spc_state != 100:
+            reg()
         
 
     def sayString(self, msg):

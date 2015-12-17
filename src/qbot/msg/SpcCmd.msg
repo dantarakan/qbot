@@ -1,2 +1,2 @@
 string question
-uint8 sys_state
+uint8 spc_state

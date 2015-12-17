@@ -33,8 +33,9 @@ from nao_speech_lib import NaoMic, NaoSpeech
 
 
 msg_topic = "NaoSpeech"
-IP = "172.20.10.8"
+#IP = "172.20.10.8"
 #IP = "192.168.1.125"
+IP = "192.168.43.70"
 
 wordlist = ['yes fine', 'i', 'am', 'yes', 'my name is', 'my name', 'eight', 'one']
 
