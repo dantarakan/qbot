@@ -1,0 +1,15 @@
+Question: How old are you?
+Reply: 20
+Question: How many hours did you sleep last night?
+Reply: 9
+Question: What is the last thing you ate, and when?
+Reply: panini
+Question: How often do you find that you cannot seem to experience any positive feeling at all?
+Reply: sometimes
+Question: How do you rate the level of service?
+Reply: excellent
+Question: Do you feel more relaxed talking to me than to a human?
+Reply: no
+Question: Would you have preferred to talk to a human instead?
+Reply: yes
+-----===== END =====-----

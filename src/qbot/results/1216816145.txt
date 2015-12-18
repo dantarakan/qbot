@@ -1,0 +1,15 @@
+Question: How old are you?
+Reply: 18
+Question: How many hours did you sleep last night?
+Reply: 6
+Question: What is the last thing you ate, and when?
+Reply: I had cheese and crackers at 2 o'clock
+Question: How often do you find that you cannot seem to experience any positive feeling at all?
+Reply: 2 minutes a day
+Question: How do you rate the level of service?
+Reply: excellent
+Question: Do you feel more relaxed talking to me than to a human?
+Reply: yes
+Question: Would you have preferred to talk to a human instead?
+Reply: no
+-----===== END =====-----

@@ -101,7 +101,7 @@ class NaoSoundTrack(ALModule):
     def stop_sound_track(self, msg):
         self.__memoryProxy.unsubscribeToMicroEvent("ALSoundLocalization/SoundLocated",self.getName())
         self.__sslProxy.unsubscribe("sound_source_locator")
-        rospy.logwarn("stopped")
+        rospy.logwarn("sound localisation stopped")
         #self.__audioProxy.unsubscribe(self.getName())
 	
     def	reset_sensitivity(self,msg):

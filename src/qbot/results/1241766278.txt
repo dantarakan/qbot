@@ -1,0 +1,15 @@
+Question: How old are you?
+Reply: 22 years old
+Question: How many hours did you sleep last night?
+Reply: 5
+Question: What is the last thing you ate, and when?
+Reply: breakfast, 2015-12-18 at 09:54:00
+Question: How often do you find that you cannot seem to experience any positive feeling at all?
+Reply: Google refused to recognise this speech or Google cannot understand what you said.
+Question: How do you rate the level of service?
+Reply: excellent
+Question: Do you feel more relaxed talking to me than to a human?
+Reply: yes
+Question: Would you have preferred to talk to a human instead?
+Reply: no
+-----===== END =====-----

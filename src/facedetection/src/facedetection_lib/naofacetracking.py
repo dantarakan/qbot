@@ -51,10 +51,10 @@ class NaoFaceTrack:
     	self.__proxyTracker = ALProxy("ALTracker", ip, port)
         self.__proxyMotion = ALProxy("ALMotion", ip, port)
         
-    	self.__face_sub = rospy.Subscriber( 
-    		_Constants.face_det_topic, 
-    		Face_detection, 
-    		self.face_tracker)		
+    	#self.__face_sub = rospy.Subscriber( 
+    	#	_Constants.face_det_topic, 
+    	#	Face_detection, 
+    	#	self.face_tracker)		
         
         self.__facepub = rospy.Publisher(
             _Constants.face_res_topic, 
@@ -72,9 +72,9 @@ class NaoFaceTrack:
         #self.__proxyFace.subscribe("TEST", Period, 0.0)	
            
 
-    def face_tracker(self, msg):
+    def face_tracker(self):
         # Stop sound localization
-        self.__facepub.publish(True, 0.0)
+        #self.__facepub.publish(True, 0.0)
         
         # First, wake up
         self.__proxyMotion.setStiffnesses("Head", 1.0)

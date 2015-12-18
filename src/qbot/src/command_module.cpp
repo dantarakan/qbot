@@ -31,7 +31,7 @@ private:
 	ros::Subscriber guiSub_;
 	uint8_t qnum, trynum;
 	std::string response, filename;
-	std::ofstream outfile;
+	std::ofstream outfile, timingoutfile, resoutfile;
 	ros::Time tCycles;
 	double t1;
 	std::stringstream convert;
@@ -45,7 +45,6 @@ public:
 		movenaoPub_ = n.advertise<std_msgs::String>("/posture", bufferSize);
 		facetrackPub_ = n.advertise<std_msgs::String>("/CNC_2_FACETRACK", bufferSize);
 		navSub_ = n.subscribe("/NAV_2_CNC", bufferSize, &Command_Node::navCallback, this);
-		//spcSub_ = n.subscribe("/SPC_2_CNC", bufferSize, &Command_Node::spcCallback, this);
 		nlpSub_ = n.subscribe("/NLP_2_CNC", bufferSize, &Command_Node::nlpCallback, this);
 		guiSub_ = n.subscribe("/GUI_2_CNC", bufferSize, &Command_Node::guiCallback, this);
 		
@@ -71,11 +70,27 @@ public:
 			ROS_INFO("QBot RESET");
 			sys_state = 0;
 			qnum = 0;
+			
+			if(outfile.is_open()){
+			    outfile.close();
+			}
+			if(timingoutfile.is_open()){
+			    timingoutfile.close();
+			}
+			if(resoutfile.is_open()){
+			    resoutfile.close();
+			}
 
 			srand(time(NULL));
 		    convert << rand();
 		    filename = "/home/human/catkin_ws/src/qbot/results/" + convert.str() + ".txt";
 		    outfile.open(filename.c_str());
+		    
+		    timingoutfile.open("/home/human/catkin_ws/src/qbot/results/timing.txt", std::ios_base::app);
+		    timingoutfile << std::endl;
+		    
+		    resoutfile.open("/home/human/catkin_ws/src/qbot/results/responses.txt", std::ios_base::app);
+		    resoutfile << std::endl;
 			
 			std_msgs::String msg;
 			msg.data = "Sit";
@@ -93,17 +108,18 @@ public:
 		// TODO: vvv confirm what triggers the introduction
 		if((guires.cmdcode==200 && sys_state==11) || (guires.cmdcode==250) ){
 			
-			
+			/*
 		    std_msgs::String msg;
 			msg.data = "Start Face Tracking";
 			facetrackPub_.publish(msg);
 			
 			ros::Duration(10).sleep();
+			*/
 			
 			sys_state = 20; // 20: able to start question
 			
 			qbot::SpcCmd spccmd;
-			spccmd.question = "Okay I can see you now. When my ears are lit up, it means that I am listening";
+			spccmd.question = "Just to let you know, when my ears are lit up, it means that I am listening";
 			spccmd.spc_state = 100;
 			spcPub_.publish(spccmd);
 			
@@ -211,7 +227,8 @@ public:
 			trynum = 0;
 			
 			outfile << "Reply: " << response << std::endl;
-			outfile << "Time: " << t1 << std::endl;
+			timingoutfile << " ," << t1;
+			resoutfile << " ," << response;
 			
 			if(qnum < ((int)questions.size()-1)){
 			
@@ -227,10 +244,13 @@ public:
 			    outfile << "-----===== END =====-----" << std::endl;
 			    outfile.close();
 			    
+			    timingoutfile.close();
+			    resoutfile.close();
+			    
 			    sys_state=30; // finished
 			    
 			    qbot::SpcCmd spccmd;
-				spccmd.question = "Thank you for your time. QBot out.";
+				spccmd.question = "Thank you for your time. Merry Christmas and Happy Holidays. QBot out.";
 				spccmd.spc_state = 100;
 				spcPub_.publish(spccmd);
 				ROS_INFO("QBot: Thank you for your time. QBot out." );

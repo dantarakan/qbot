@@ -47,6 +47,7 @@ if __name__ == "__main__":
     
     global NaoFace
     NaoFace = NaoFaceTrack(ip, port)
+    NaoFace.face_tracker()
     
     rospy.loginfo(" started")
     rospy.spin()
