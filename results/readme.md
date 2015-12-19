@@ -11,6 +11,8 @@ The addition of face tracking and animated speech helps the robot appeal more to
 
 Other than 2 of the evaluators who had relevant technical experience relating to speech recognition, it was observed that the evaluators find that the QBot is taking too long a time to respond. 1 of them commented that there should be a acknowledgement reply from QBot before proceeding with the next question. Around 10 of them over-estimated the ability of QBot and started chatting with it at the start, before the observer stepped in to explain the situation to them.
 
+Speech recognition took significantly longer when the environment is noisy. This is due to the energy threshold used to determine if the speech has ended. A quick fix was made by asking the evaluators to switch off the microphone when they finished responding. A push-to-talk microphone will alleviate this problem greatly.
+
 
 ####Questions Asked
 How old are you?
